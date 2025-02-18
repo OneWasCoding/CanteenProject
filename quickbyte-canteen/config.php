@@ -1,12 +1,14 @@
 <?php
 $host = "localhost";
-$user = "root";
-$password = "";
-$database = "canteen_database";
+$user = "root";     // your database username
+$pass = "";         // your database password
+$db   = "canteen_database";  // your database name
 
-$conn = new mysqli($host, $user, $password, $database);
+// Create connection
+$con = new mysqli($host, $user, $pass, $db);
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Check connection
+if ($con->connect_error) {
+    die("Connection failed: " . $con->connect_error);
 }
 ?>

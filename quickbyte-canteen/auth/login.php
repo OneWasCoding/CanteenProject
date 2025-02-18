@@ -1,6 +1,13 @@
 <?php
 session_start();
-include '../config.php'; // Include database connection
+
+// Include database connection
+include '../config.php';
+
+// Check if config.php is working and the database connection is established
+if (!isset($con)) {
+    die("config.php is NOT working correctly. Database connection is NOT established.  Check your database credentials and connection code in config.php.  Also, check the file path in the include statement.");
+}
 
 $error = ""; // Initialize error message
 
@@ -23,21 +30,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $result->fetch_assoc();
 
     // Verify the password and user
-    if ($user && password_verify($password, $user['password'])) {
-        // Set session variables
-        $_SESSION['user_id'] = $user['user_id'];
-        $_SESSION['user_name'] = $user['name'];
-        $_SESSION['user_role'] = $user['role'];
+    if ($user) { // User exists
+        if (password_verify($password, $user['password'])) {
+            // Authentication successful
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_role'] = $user['role'];
 
-        // Redirect based on user type
-        if ($user['role'] == 'Admin') {
-            header("Location: ../admin/dashboard.php");
+            // Redirect based on user type
+            if ($user['role'] == 'Admin') {
+                header("Location: ../admin/dashboard.php");
+            } else {
+                header("Location: ../user/index.php");
+            }
+            exit();
         } else {
-            header("Location: ../user/index.php");
+            // Password incorrect
+            $error = "Invalid password!";
         }
-        exit();
     } else {
-        $error = "Invalid email or password!";
+        // User not found
+        $error = "Account does not exist, please register!";
     }
 
     // Close the statement
@@ -159,11 +172,11 @@ include '../includes/header.php';
     }
 
     @keyframes floatIcon {
-        0%, 100% { 
+        0%, 100% {
             transform: translate(0, 0) rotate(0deg);
             opacity: 0.4;
         }
-        50% { 
+        50% {
             transform: translate(5px, -5px) rotate(10deg);
             opacity: 0.6;
         }
@@ -213,31 +226,31 @@ include '../includes/header.php';
             <i class="bi bi-shop"></i>
         </div>
     </div>
-    
+
     <h2 class="text-center mb-4">QuickByte Canteen</h2>
-    
+
     <?php if ($error): ?>
         <div class="alert alert-danger" role="alert">
             <?php echo $error; ?>
         </div>
     <?php endif; ?>
-    
+
     <form method="POST">
         <div class="form-group">
             <i class="bi bi-envelope"></i>
-            <input type="email" class="form-control" id="email" name="email" 
+            <input type="email" class="form-control" id="email" name="email"
                    placeholder="Enter email" required>
         </div>
         <div class="form-group">
             <i class="bi bi-lock"></i>
-            <input type="password" class="form-control" id="password" name="password" 
+            <input type="password" class="form-control" id="password" name="password"
                    placeholder="Password" required>
         </div>
         <button type="submit" class="btn btn-primary btn-block w-100">Login</button>
     </form>
-    
+
     <p class="text-center mt-4 mb-0">
-        Don't have an account? 
+        Don't have an account?
         <a href="register.php" class="text-primary fw-bold">Register here</a>
     </p>
 </div>
