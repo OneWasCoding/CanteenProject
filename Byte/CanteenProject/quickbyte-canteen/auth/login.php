@@ -30,19 +30,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $result->fetch_assoc();
 
     // Verify the password and user
-    if ($user) { // User exists
+    if ($user) {
+        // User exists
         if (password_verify($password, $user['password'])) {
             // Authentication successful
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
-
+    
             // Redirect based on user type
-            if ($user['role'] == 'Admin') {
-                header("Location: ../admin/dashboard.php");
-            } else {
-                header("Location: ../user/index.php");
+            switch ($user['role']) {
+                case 'Admin':
+                    $redirectUrl = '../admin/dashboard.php';
+                    break;
+                case 'Retailer':
+                    $redirectUrl = '../Retailer/index.php';
+                    break;
+                default:
+                    $redirectUrl = '../user/index.php';
+                    break;
             }
+    
+            header("Location: $redirectUrl");
             exit();
         } else {
             // Password incorrect
@@ -52,10 +61,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // User not found
         $error = "Account does not exist, please register!";
     }
-
+    
     // Close the statement
     $stmt->close();
 }
+    // It's a good practice to handle the error message display here
+    if (isset($error)) {
+        echo $error;
+    }
+    
 
 $pageTitle = "QuickByte Canteen - Login"; // Set the page title
 include '../includes/header.php';
@@ -256,3 +270,4 @@ include '../includes/header.php';
 </div>
 
 <?php include '../includes/footer.php'; ?>
+    

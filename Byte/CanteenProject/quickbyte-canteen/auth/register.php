@@ -8,9 +8,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $full_name = $_POST["full_name"];
     $email = $_POST["email"];
     $password = $_POST["password"];
-    $user_type = "Student";
+    $user_type = $_POST["user_type"];
 
-    if (empty($full_name) || empty($email) || empty($password)) {
+    if (empty($full_name) || empty($email) || empty($password) || empty($user_type)) {
         $error = "Please fill in all fields.";
     } else {
         $check_email_sql = "SELECT user_id FROM users WHERE email = ?";
@@ -206,6 +206,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <i class="fas fa-lock"></i>
                 <input type="password" class="form-control" id="password" name="password" 
                        placeholder="Password" required>
+            </div>
+
+            <div class="form-group">
+                <i class="fas fa-user-tag"></i>
+                <select class="form-control" id="user_type" name="user_type" required>
+                    <option value="">Select Role</option>
+                    <option value="Student">Student</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Admin">Admin</option>
+                </select>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block">Register</button>
