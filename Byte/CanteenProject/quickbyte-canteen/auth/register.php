@@ -213,7 +213,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <select class="form-control" id="user_type" name="user_type" required>
                     <option value="">Select Role</option>
                     <option value="Student">Student</option>
-                    <option value="Staff">Staff</option>
+                    <option value="Retailer">Retailer</option>
                     <option value="Admin">Admin</option>
                 </select>
             </div>

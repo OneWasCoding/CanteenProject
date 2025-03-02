@@ -8,15 +8,7 @@
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="logo">Retailer Panel</div>
-        <ul class="nav-links">
-            <li><a href="retailer_dashboard.php">Dashboard</a></li>
-            <li><a href="#">Settings</a></li>
-            <li><a href="#">Logout</a></li>
-        </ul>
-    </nav>
-
+<?php include('header.php')?>
     <div class="main-content">
         <h1>Welcome to 
             <?php echo isset($_GET['stall']) ? htmlspecialchars($_GET['stall']) : "Unknown Stall"; ?>!

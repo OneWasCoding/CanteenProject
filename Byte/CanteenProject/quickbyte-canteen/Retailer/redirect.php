@@ -1,7 +1,8 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (!empty($_POST["stall_name"])) {
+    if (!empty($_POST["stall_name"]) && !empty($_POST["password"])) {
         $stall = $_POST["stall_name"]; // Get stall name
+        $password = $_POST["password"]; // Get password
 
         // Define a mapping of stall names to their respective PHP pages
         $stallPages = [
@@ -9,18 +10,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             "Bonapetite" => "bonapetite.php"
         ];
 
-        // Check if the selected stall exists in the mapping
-        if (array_key_exists($stall, $stallPages)) {
-            $redirectPage = $stallPages[$stall];
-            header("Location: $redirectPage?stall=" . urlencode($stall));
+        // Verify the password here
+        // For demonstration purposes, assume the password is correct
+        if (true) { // Replace with actual password verification logic
+            if (array_key_exists($stall, $stallPages)) {
+                $redirectPage = $stallPages[$stall];
+                header("Location: $redirectPage?stall=" . urlencode($stall));
+            } else {
+                // Redirect to a default page if stall is not found
+                header("Location: index.php");
+            }
         } else {
-            // Redirect to a default page if stall is not found
-            header("Location: retailer_dashboard.php");
+            echo "Incorrect password.";
         }
     } else {
-        // Redirect back if no stall is selected
-        header("Location: retailer_dashboard.php");
+        // Redirect back if no stall or password is provided
+        header("Location: index.php");
     }
     exit();
-}
-?>
+    }   
+    ?>
