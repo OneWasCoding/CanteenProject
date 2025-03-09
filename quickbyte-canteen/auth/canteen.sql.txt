@@ -1,0 +1,1 @@
+edited the part for the register to have a proper auth for admin to make an account with no need to choose the role when registering.
