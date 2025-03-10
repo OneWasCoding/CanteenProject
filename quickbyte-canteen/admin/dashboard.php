@@ -48,50 +48,74 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_user']) || isset(
     $role = sanitize_input($_POST['role']);
     $password = $_POST['password']; // Password field is always required during add
 
-    // Validation
+    // Validation: Check required fields
     if (empty($name) || empty($email) || empty($role)) {
         $error_message = "Please fill in all required fields.";
     } else {
+        // Check if email already exists
         if (isset($_POST['add_user'])) {
-            // Hash the password
-            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+            $check_sql = "SELECT email FROM users WHERE email = ?";
+            $check_stmt = $con->prepare($check_sql);
+            $check_stmt->bind_param("s", $email);
+            $check_stmt->execute();
+            $check_stmt->store_result();
 
-            // Prepare the SQL statement
-            $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
-            $stmt = $con->prepare($sql);
-            $stmt->bind_param("ssss", $name, $email, $hashedPassword, $role);
-
-            if ($stmt->execute()) {
-                $success_message = "User added successfully.";
+            if ($check_stmt->num_rows > 0) {
+                $error_message = "Error: Email already exists. Please use a different email.";
             } else {
-                $error_message = "Error adding user: " . $stmt->error;
-            }
-
-            $stmt->close();
-        } elseif (isset($_POST['update_user'])) {
-            // Check if a password is provided for update
-            if (!empty($_POST['password'])) {
+                // Hash the password
                 $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-                $sql = "UPDATE users SET name = ?, email = ?, role = ?, password = ? WHERE user_id = ?";
-                $stmt = $con->prepare($sql);
-                $stmt->bind_param("ssssi", $name, $email, $role, $hashedPassword, $user_id);
-            } else {
-                // If no password, update other fields only
-                $sql = "UPDATE users SET name = ?, email = ?, role = ? WHERE user_id = ?";
-                $stmt = $con->prepare($sql);
-                $stmt->bind_param("sssi", $name, $email, $role, $user_id);
-            }
 
-            if ($stmt->execute()) {
-                $success_message = "User updated successfully.";
-            } else {
-                $error_message = "Error updating user: " . $stmt->error;
-            }
+                // Insert the new user
+                $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("ssss", $name, $email, $hashedPassword, $role);
 
-            $stmt->close();
+                if ($stmt->execute()) {
+                    $success_message = "User added successfully.";
+                } else {
+                    $error_message = "Error adding user: " . $stmt->error;
+                }
+                $stmt->close();
+            }
+            $check_stmt->close();
+
+        } elseif (isset($_POST['update_user'])) {
+            // Check if the new email belongs to another user
+            $check_sql = "SELECT user_id FROM users WHERE email = ? AND user_id != ?";
+            $check_stmt = $con->prepare($check_sql);
+            $check_stmt->bind_param("si", $email, $user_id);
+            $check_stmt->execute();
+            $check_stmt->store_result();
+
+            if ($check_stmt->num_rows > 0) {
+                $error_message = "Error: Email is already in use by another user.";
+            } else {
+                if (!empty($_POST['password'])) {
+                    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                    $sql = "UPDATE users SET name = ?, email = ?, role = ?, password = ? WHERE user_id = ?";
+                    $stmt = $con->prepare($sql);
+                    $stmt->bind_param("ssssi", $name, $email, $role, $hashedPassword, $user_id);
+                } else {
+                    // If no password change, update only name, email, and role
+                    $sql = "UPDATE users SET name = ?, email = ?, role = ? WHERE user_id = ?";
+                    $stmt = $con->prepare($sql);
+                    $stmt->bind_param("sssi", $name, $email, $role, $user_id);
+                }
+
+                if ($stmt->execute()) {
+                    $success_message = "User updated successfully.";
+                } else {
+                    $error_message = "Error updating user: " . $stmt->error;
+                }
+
+                $stmt->close();
+            }
+            $check_stmt->close();
         }
     }
 }
+
 
 // Handle Delete User/Retailer
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['delete_user'])) {
@@ -704,6 +728,7 @@ $fetch_retailer_inventory_result = $con->query($fetch_retailer_inventory_sql);
                         </div>
                         <span class="user-name"><?php echo htmlspecialchars($admin_name); ?></span>
                     </div>
+                    
                     <a href="../auth/logout.php" class="logout-btn">
                         <i class="bi bi-box-arrow-right"></i>
                         Logout
