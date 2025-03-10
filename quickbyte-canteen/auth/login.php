@@ -16,11 +16,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // Prepare the SQL statement
-    $sql = "SELECT user_id, name, password, role FROM users WHERE email = ?";
+    $sql = "SELECT user_id, name, password, role FROM users WHERE email = ? && status=1";
     $stmt = $con->prepare($sql);
     $stmt->bind_param("s", $email);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $result = $stmt->get_result();  
     $user = $result->fetch_assoc();
     $stmt->close();
 

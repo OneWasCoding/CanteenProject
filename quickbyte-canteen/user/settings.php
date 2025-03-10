@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Handle account deactivation
     if (isset($_POST['deactivate_account'])) {
         // Update account status in the database
-        $deactivate_sql = "UPDATE users SET active = 0 WHERE user_id = ?";
+        $deactivate_sql = "UPDATE users SET status = 0 WHERE user_id = ?";
         $stmt_deactivate = $con->prepare($deactivate_sql);
         $stmt_deactivate->bind_param("i", $user_id);
 
