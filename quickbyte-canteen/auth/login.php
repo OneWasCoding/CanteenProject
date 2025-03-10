@@ -6,7 +6,7 @@ include '../config.php';
 
 // Check if config.php is working and the database connection is established
 if (!isset($con)) {
-    die("config.php is NOT working correctly. Database connection is NOT established. Check your database credentials and connection code in config.php. Also, check the file path in the include statement.");
+    die("Database connection is NOT established. Check your database credentials.");
 }
 
 $error = ""; // Initialize error message
@@ -16,41 +16,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // Prepare the SQL statement
-    $sql = "SELECT user_id, name, password, role FROM users WHERE email = ? && status=1";
+    $sql = "SELECT user_id, name, password, role, stall_id FROM users WHERE email = ? AND status = 1";
     $stmt = $con->prepare($sql);
     $stmt->bind_param("s", $email);
     $stmt->execute();
-    $result = $stmt->get_result();  
+    $result = $stmt->get_result();
     $user = $result->fetch_assoc();
     $stmt->close();
 
     if ($user) {
-        // Check if the user is an Admin
-        if ($user['role'] === 'Admin') {
-            // Redirect to admin login page
-            header("Location: ../admin/adminlogin.php?email=" . urlencode($email));
-            exit();
-        }
-
-        // Verify password for non-admin users
+        // Verify password
         if (password_verify($password, $user['password'])) {
-            // Authentication successful
+            // Set session variables
             $_SESSION['user_id'] = $user['user_id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
+            $_SESSION['name'] = $user['name'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['stall_id'] = $user['stall_id'] ?? null; // Assign stall_id if applicable
 
-            // Redirect to the respective dashboard
+            // Redirect based on user role
             switch ($user['role']) {
+                case 'Admin':
+                    header("Location: ../admin/dashboard.php");
+                    exit();
+                
                 case 'Retailer':
-                    $redirectUrl = '../Retailer/index.php';
-                    break;
-                default:
-                    $redirectUrl = '../user/index.php';
-                    break;
-            }
+                    // Redirect retailer to their assigned stall page
+                    if (!empty($user['stall_id'])) {
+                        header("Location: ../retailer/stalls/stall_$user[stall_id].php");
+                    } else {
+                        header("Location: login.php");
+                    }
+                    exit();
 
-            header("Location: $redirectUrl");
-            exit();
+                case 'Customer':
+                default:
+                    header("Location: ../user/index.php");
+                    exit();
+            }
         } else {
             $error = "Invalid password!";
         }

@@ -9,31 +9,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST["email"]);
     $password = trim($_POST["password"]);
     $role = isset($_POST["role"]) ? trim($_POST["role"]) : '';
+    $stall_id = isset($_POST["stall_id"]) ? trim($_POST["stall_id"]) : '';
 
-    // If admin email is detected, enforce Admin role
-    if ($email === "ad123min@gmail.com") {
-        $role = "Admin";
-    }
-
-    if (empty($full_name) || empty($email) || empty($password)) {
+    if (empty($full_name) || empty($email) || empty($password) || empty($role)) {
         $error = "Please fill in all fields.";
+    } elseif ($role === "Retailer" && empty($stall_id)) {
+        $error = "Please select a stall.";
     } else {
-        // Check for duplicate full name
-        $check_name_sql = "SELECT user_id FROM users WHERE name = ?";
-        $check_name_stmt = $con->prepare($check_name_sql);
-        $check_name_stmt->bind_param("s", $full_name);
-        $check_name_stmt->execute();
-        $check_name_stmt->store_result();
+        $check_email_sql = "SELECT user_id FROM users WHERE email = ?";
+        $check_email_stmt = $con->prepare($check_email_sql);
+        $check_email_stmt->bind_param("s", $email);
+        $check_email_stmt->execute();
+        $check_email_stmt->store_result();
 
-        if ($check_name_stmt->num_rows > 0) {
-            $error = "This full name is already registered. Please use a different name.";
+        if ($check_email_stmt->num_rows > 0) {
+            $error = "This email address is already registered. Please use a different email or log in.";
         } else {
-            // Hash the password before storing it
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-            $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+            $sql = "INSERT INTO users (name, email, password, role, stall_id) VALUES (?, ?, ?, ?, ?)";
             $stmt = $con->prepare($sql);
-            $stmt->bind_param("ssss", $full_name, $email, $hashedPassword, $role);
+            $stmt->bind_param("sssss", $full_name, $email, $hashedPassword, $role, $stall_id);
 
             if ($stmt->execute()) {
                 header("Location: login.php");
@@ -43,10 +39,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $stmt->close();
         }
-        $check_name_stmt->close();
+        $check_email_stmt->close();
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -84,6 +79,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             position: relative;
             transition: all 0.3s ease;
             z-index: 10;
+            display: flex;
+            flex-direction: column;
         }
 
         .logo-container {
@@ -141,28 +138,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(228, 77, 38, 0.2);
         }
+
+        .form-content {
+            flex-grow: 1;
+        }
     </style>
 
     <script>
-        function checkAdminEmail() {
-            let emailField = document.getElementById("email");
+        function checkRole() {
             let roleField = document.getElementById("role");
-            let adminEmail = "ad123min@gmail.com";
+            let stallField = document.getElementById("stall-select");
 
-            if (emailField.value.trim() === adminEmail) {
-                let adminOption = document.getElementById("admin-option");
-                if (!adminOption) {
-                    adminOption = document.createElement("option");
-                    adminOption.value = "Admin";
-                    adminOption.textContent = "Admin";
-                    adminOption.id = "admin-option";
-                    roleField.appendChild(adminOption);
+            if (roleField.value === "Retailer") {
+                if (!stallField) {
+                    // Create stall select field if it doesn't exist
+                    stallField = document.createElement("div");
+                    stallField.id = "stall-select";
+                    stallField.innerHTML = `
+                        <div class="form-group">
+                            <i class="fas fa-store"></i>
+                            <select class="form-select" id="stall_id" name="stall_id" required>
+                                <option value="">Select Stall</option>
+                                <?php
+                                $stallSql = "SELECT stall_id, name FROM stalls";
+                                $stallStmt = $con->prepare($stallSql);
+                                $stallStmt->execute();
+                                $stallResult = $stallStmt->get_result();
+
+                                while ($stallRow = $stallResult->fetch_assoc()) {
+                                    echo "<option value='" . $stallRow['stall_id'] . "'>" . $stallRow['name'] . "</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    `;
+                    roleField.parentNode.parentNode.appendChild(stallField);
                 }
-                roleField.value = "Admin"; // Auto-select admin role
             } else {
-                let adminOption = document.getElementById("admin-option");
-                if (adminOption) {
-                    adminOption.remove(); // Remove Admin option if email changes
+                if (stallField) {
+                    stallField.remove(); // Remove stall select if role changes
                 }
             }
         }
@@ -178,7 +192,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h2 class="text-center mb-4">Create Account</h2>
     </div>
 
-    <form method="POST">
+    <form id="register-form" method="POST" class="form-content">
         <?php if (!empty($error)): ?>
             <div class="alert alert-danger" role="alert">
                 <?php echo $error; ?>
@@ -194,7 +208,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <i class="fas fa-envelope"></i>
             <input type="email" class="form-control" id="email" name="email"
-                   placeholder="Email Address" required oninput="checkAdminEmail()">
+                   placeholder="Email Address" required>
         </div>
 
         <div class="form-group">
@@ -205,21 +219,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-group">
             <i class="fas fa-user-tag"></i>
-            <select class="form-select" id="role" name="role" required>
+            <select class="form-select" id="role" name="role" required onchange="checkRole()">
                 <option value="">Select Role</option>
                 <option value="Student">Student</option>
                 <option value="Retailer">Retailer</option>
             </select>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block">Register</button>
+    </form>
+
+    <div class="mt-auto">
+        <button type="submit" form="register-form" class="btn btn-primary btn-block">Register</button>
 
         <div class="text-center mt-4">
             <p class="mb-0">Already have an account?
                 <a href="login.php" class="text-primary">Login here</a>
             </p>
         </div>
-    </form>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
