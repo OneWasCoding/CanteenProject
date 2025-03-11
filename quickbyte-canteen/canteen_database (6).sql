@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 10, 2025 at 01:30 PM
+-- Generation Time: Mar 11, 2025 at 03:12 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -39,7 +39,22 @@ CREATE TABLE `cart` (
 --
 
 INSERT INTO `cart` (`cart_id`, `user_id`, `item_id`, `quantity`) VALUES
-(23, 6, 2, 1);
+(37, 2, 5, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `feedback`
+--
+
+CREATE TABLE `feedback` (
+  `feedback_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `stall_id` int(11) NOT NULL,
+  `rating` int(11) DEFAULT NULL CHECK (`rating` between 1 and 5),
+  `comment` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -53,18 +68,6 @@ CREATE TABLE `gcash_accounts` (
   `account_name` varchar(100) NOT NULL,
   `balance` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `gcash_accounts`
---
-
-INSERT INTO `gcash_accounts` (`account_id`, `account_number`, `account_name`, `balance`) VALUES
-(1, '09171234567', 'John Doe', 310.63),
-(2, '09181234568', 'Jane Smith', 1000.00),
-(3, '09191234569', 'Alice Johnson', 750.50),
-(4, '09201234570', 'Bob Brown', 300.00),
-(5, '09211234571', 'Charlie Davis', 1200.75),
-(6, '09920993829', 'Allan Monforte', 9999890.00);
 
 -- --------------------------------------------------------
 
@@ -220,6 +223,26 @@ INSERT INTO `payments` (`payment_id`, `order_id`, `user_id`, `amount`, `payment_
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `retailers`
+--
+
+CREATE TABLE `retailers` (
+  `retailer_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `stall_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `retailers`
+--
+
+INSERT INTO `retailers` (`retailer_id`, `user_id`, `stall_id`) VALUES
+(1, 14, 9),
+(2, 15, 8);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `stalls`
 --
 
@@ -235,9 +258,19 @@ CREATE TABLE `stalls` (
 --
 
 INSERT INTO `stalls` (`stall_id`, `name`, `description`, `image_path`) VALUES
-(1, 'Store 1', 'Delicious Burgers and Fries', 'images/store1.jpg'),
-(2, 'Store 2', 'Fresh Drinks and Juices', 'images/store2.jpg'),
-(3, 'Store 3', 'Tasty Snacks and Desserts', 'images/store3.jpg');
+(1, 'Bonapetite', 'Delicious Burgers and Fries', 'images/store1.jpg'),
+(2, 'Kael', 'Fresh Drinks and Juices', 'images/store2.jpg'),
+(3, 'asfdfg', 'Tasty Snacks and Desserts', 'images/store3.jpg'),
+(4, 'The Hungry Hippo', 'Sells snacks and beverages', 'images/stall1.jpg'),
+(5, 'Rice & Shine', 'Offers rice meals and soups', 'images/stall2.jpg'),
+(6, 'Juice Junction', 'Specializes in fresh fruit juices', 'images/stall3.jpg'),
+(7, 'Grillzilla', 'Fast food and grilled items', 'images/stall4.jpg'),
+(8, 'Sweet Tooth Haven', 'Desserts and sweets', 'images/stall5.jpg'),
+(9, 'Lutong Bahay', 'Authentic Filipino cuisine', 'images/stall6.jpg'),
+(10, 'Green Bites', 'Vegetarian and healthy options', 'images/stall7.jpg'),
+(11, 'Bean & Brew', 'Coffee, tea, and pastries', 'images/stall8.jpg'),
+(12, 'Taste of Asia', 'International dishes', 'images/stall9.jpg'),
+(13, 'Street Feast', 'Street food and local delicacies', 'images/stall10.jpg');
 
 -- --------------------------------------------------------
 
@@ -265,14 +298,18 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `role`, `balance`, `phone`, `address`, `status`, `image_path`) VALUES
 (1, 'Allan Monforte', 'allanmonforte@gmail.com', '$2y$10$dc.DM7LykXx8iyqgPZK4U.7epAUrDJqVSFLGUWbYNu6Ai1zG0j2ou', 'Admin', 13497.19, '09686827403', '285 PNR Site, Western Bicutan Taguig City, Western Bicutan', 0, 'images/profiles/cute-cat-eyes-profile-picture-uq3edzmg1guze2hh.jpg'),
-(2, 'eggs', 'ego123123@gmail.net', '$2y$10$jTeazZ6pzHdI2d5dSxkIdu65pLFLM7xpyR6mmExVIcrb1vSdoxgVq', 'Retailer', 99999999.99, '6969', 'gayland', 1, 'images/default-profile.jpg'),
+(2, 'eggs', 'ego123123@gmail.net', '$2y$10$jTeazZ6pzHdI2d5dSxkIdu65pLFLM7xpyR6mmExVIcrb1vSdoxgVq', 'Student', 99999999.99, '6969', 'gayland', 1, 'images/default-profile.jpg'),
 (3, 'Melvin', 'melvin1234@gmail.com', '$2y$10$3sdO.wGghgce/3n6jipIh.syBETL7VagujIPjIKXiUFh7inGO6DpK', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (4, 'zcdasad@gasfsas.coaj', '123123@gmail.com', '$2y$10$.7F2Ud.lXqib.uNErYlc1uVy162S.7KKxeB64PyORXj8sHhBx5aTq', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (6, 'egoian', 'ego123@gmail.com', '$2y$10$v7CN02fZjTAVgoheVDzBWOiHtbnsTRbxZGJHyp/v7mf4seTHKKWSy', 'Student', 0.00, NULL, NULL, 1, 'images/profiles/Ego.jpeg'),
 (7, 'egoego123', 'ego123123123@gmail.com', '$2y$10$hhh3B7FizI7.VqRDV4vgcuraBJF/8XuR88mo.qe0kkFhcvEXRYxIy', 'Admin', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
-(8, 'Egos', 'ad123min@gmail.com', '$2y$10$aJ5tAaRF477X6kvm.kjFkuy8VKeNpGdBHKAq2JTWkU05BwKVv2J0i', 'Admin', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+(8, 'Egos', 'ad123min@gmail.com', '$2y$10$aJ5tAaRF477X6kvm.kjFkuy8VKeNpGdBHKAq2JTWkU05BwKVv2J0i', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (9, 'Ianzae Ryan P. Ego', 'tolitsjacks@gmail.com', '$2y$10$TJZaVULCZEB6ho7ZGW65JuKVXllthAocnuNxVlIrdzlUgtKLbwJOe', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
-(11, 'Meinfried', '123@gmail.com', '$2y$10$dA6o1HwMunCiebYLSZo5Qe.1WF6SavcA0xaDDjXUxdYL9ETd1u/Ey', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg');
+(11, 'Meinfried', '123@gmail.com', '$2y$10$dA6o1HwMunCiebYLSZo5Qe.1WF6SavcA0xaDDjXUxdYL9ETd1u/Ey', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+(12, 'Allan', 'a@gmail.com', '$2y$10$jS3SFUAO0CMTvBPaAO0hveeKYWM7K3EmGcNZBxW9v/FEd3dewbAQS', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+(13, 'Levi', 'l@gmail.com', '$2y$10$HlFlEWdBU7GbnX2k.70u7ujLB1hpJ8T.mRNuDd3MS2VKcNKQglxaa', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+(14, 'bor', 'borjabisaya@gmail.com', '$2y$10$CSxsLT/j4yOHoyTD8vBuKO0QvYbOhPVPq90aIHs6jHiLIQ4b8aeMK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+(15, 'Melvs', 'w@gmail.com', '$2y$10$OdI59Cgo1bxHCpANUlNYBOgjZ/EpR40uSaQNXmGfPX.IMSnT0RZBK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg');
 
 --
 -- Indexes for dumped tables
@@ -285,6 +322,14 @@ ALTER TABLE `cart`
   ADD PRIMARY KEY (`cart_id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `item_id` (`item_id`);
+
+--
+-- Indexes for table `feedback`
+--
+ALTER TABLE `feedback`
+  ADD PRIMARY KEY (`feedback_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `stall_id` (`stall_id`);
 
 --
 -- Indexes for table `gcash_accounts`
@@ -330,6 +375,13 @@ ALTER TABLE `payments`
   ADD KEY `order_id` (`order_id`);
 
 --
+-- Indexes for table `retailers`
+--
+ALTER TABLE `retailers`
+  ADD PRIMARY KEY (`retailer_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Indexes for table `stalls`
 --
 ALTER TABLE `stalls`
@@ -352,13 +404,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+
+--
+-- AUTO_INCREMENT for table `feedback`
+--
+ALTER TABLE `feedback`
+  MODIFY `feedback_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `gcash_accounts`
 --
 ALTER TABLE `gcash_accounts`
-  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `inventory`
@@ -385,16 +443,22 @@ ALTER TABLE `payments`
   MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
+-- AUTO_INCREMENT for table `retailers`
+--
+ALTER TABLE `retailers`
+  MODIFY `retailer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `stalls`
 --
 ALTER TABLE `stalls`
-  MODIFY `stall_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `stall_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- Constraints for dumped tables
@@ -406,6 +470,13 @@ ALTER TABLE `users`
 ALTER TABLE `cart`
   ADD CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `menu_items` (`item_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `feedback`
+--
+ALTER TABLE `feedback`
+  ADD CONSTRAINT `feedback_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `feedback_ibfk_2` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`stall_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `inventory`
@@ -437,6 +508,12 @@ ALTER TABLE `order_details`
 --
 ALTER TABLE `payments`
   ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `retailers`
+--
+ALTER TABLE `retailers`
+  ADD CONSTRAINT `retailers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

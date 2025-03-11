@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // Prepare the SQL statement
-    $sql = "SELECT user_id, name, password, role, stall_id FROM users WHERE email = ? AND status = 1";
+    $sql = "SELECT user_id, name, password, role FROM users WHERE email = ? AND status = 1";
     $stmt = $con->prepare($sql);
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -31,22 +31,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['name'] = $user['name'];
             $_SESSION['role'] = $user['role'];
-            $_SESSION['stall_id'] = $user['stall_id'] ?? null; // Assign stall_id if applicable
 
             // Redirect based on user role
             switch ($user['role']) {
                 case 'Admin':
                     header("Location: ../admin/dashboard.php");
                     exit();
-                
+
                 case 'Retailer':
-                    // Redirect retailer to their assigned stall page
-                    if (!empty($user['stall_id'])) {
-                        header("Location: ../retailer/stalls/stall_$user[stall_id].php");
+                    // Fetch stall_id from the retailers table
+                    $retailer_sql = "SELECT stall_id FROM retailers WHERE user_id = ?";
+                    $retailer_stmt = $con->prepare($retailer_sql);
+                    $retailer_stmt->bind_param("i", $user['user_id']);
+                    $retailer_stmt->execute();
+                    $retailer_result = $retailer_stmt->get_result();
+                    $retailer = $retailer_result->fetch_assoc();
+                    $retailer_stmt->close();
+
+                    if ($retailer && !empty($retailer['stall_id'])) {
+                        $_SESSION['stall_id'] = $retailer['stall_id']; // Store stall_id in session
+                        header("Location: ../retailer/stalls/stall_{$retailer['stall_id']}.php");
+                        exit();
                     } else {
-                        header("Location: login.php");
+                        $error = "Retailer account is not assigned to a stall!";
                     }
-                    exit();
+                    break;
 
                 case 'Customer':
                 default:

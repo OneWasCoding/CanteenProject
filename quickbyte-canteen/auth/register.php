@@ -27,13 +27,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-            $sql = "INSERT INTO users (name, email, password, role, stall_id) VALUES (?, ?, ?, ?, ?)";
+            // Insert user data into the users table
+            $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
             $stmt = $con->prepare($sql);
-            $stmt->bind_param("sssss", $full_name, $email, $hashedPassword, $role, $stall_id);
+            $stmt->bind_param("ssss", $full_name, $email, $hashedPassword, $role);
 
             if ($stmt->execute()) {
-                header("Location: login.php");
-                exit();
+                $user_id = $con->insert_id; // Get the newly inserted user ID
+
+                // If the user is a retailer, store additional data in the retailers table
+                if ($role === "Retailer") {
+                    $retailer_sql = "INSERT INTO retailers (user_id, stall_id) VALUES (?, ?)";
+                    $retailer_stmt = $con->prepare($retailer_sql);
+                    $retailer_stmt->bind_param("ii", $user_id, $stall_id);
+
+                    if ($retailer_stmt->execute()) {
+                        header("Location: login.php");
+                        exit();
+                    } else {
+                        $error = "Retailer registration failed. Please try again.";
+                    }
+                    $retailer_stmt->close();
+                } else {
+                    header("Location: login.php");
+                    exit();
+                }
             } else {
                 $error = "Registration failed. Please try again.";
             }
@@ -53,35 +71,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        
         body {
-            background-color: #f8f9fa;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-                             url('../assets/img/canteen-background.jpg');
-            background-size: cover;
-            background-position: center;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 15px;
-            overflow: hidden;
-        }
+    background-color: #f8f9fa;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                     url('../assets/img/canteen-background.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 15px;
+    overflow: hidden;
+}
 
-        .register-container {
-            background-color: rgba(255, 255, 255, 0.92);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            width: 100%;
-            max-width: 400px;
-            margin: auto;
-            position: relative;
-            transition: all 0.3s ease;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-        }
+.register-container {
+    background-color: rgba(255, 255, 255, 0.92);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto; 
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.register-container::-webkit-scrollbar {
+    width: 8px; /* Thin scrollbar */
+}
+
+.register-container::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Light gray track */
+    border-radius: 10px;
+}
+
+.register-container::-webkit-scrollbar-thumb {
+    background: #e44d26; /* Bootstrap primary color */
+    border-radius: 10px;
+}
+
+.register-container::-webkit-scrollbar-thumb:hover {
+    background:rgb(44, 37, 35); /* Slightly darker on hover */
+}
 
         .logo-container {
             text-align: center;
@@ -141,7 +177,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .form-content {
             flex-grow: 1;
+            max-height: 50vh; /* Limits the scrollable height */
+             overflow-y: auto; /* Enables vertical scrolling */
+            padding-right: 10px; /* Prevents content from overlapping scrollbar */
+            scrollbar-width: thin;
+            scrollbar-color: #e44d26 #f1f1f1;
         }
+
+        
     </style>
 
     <script>
