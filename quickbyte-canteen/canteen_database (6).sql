@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 11, 2025 at 03:12 AM
+-- Generation Time: Mar 12, 2025 at 03:31 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -39,7 +39,8 @@ CREATE TABLE `cart` (
 --
 
 INSERT INTO `cart` (`cart_id`, `user_id`, `item_id`, `quantity`) VALUES
-(37, 2, 5, 1);
+(37, 2, 5, 1),
+(38, 14, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -54,6 +55,21 @@ CREATE TABLE `feedback` (
   `rating` int(11) DEFAULT NULL CHECK (`rating` between 1 and 5),
   `comment` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `food_storage`
+--
+
+CREATE TABLE `food_storage` (
+  `storage_id` int(11) NOT NULL,
+  `stall_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `food_name` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `expiration_day` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -77,8 +93,10 @@ CREATE TABLE `gcash_accounts` (
 
 CREATE TABLE `inventory` (
   `inventory_id` int(11) NOT NULL,
-  `item_id` int(11) NOT NULL,
-  `quantity_in_stock` int(11) NOT NULL,
+  `stall_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `expiry_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -86,12 +104,12 @@ CREATE TABLE `inventory` (
 -- Dumping data for table `inventory`
 --
 
-INSERT INTO `inventory` (`inventory_id`, `item_id`, `quantity_in_stock`, `last_updated`) VALUES
-(1, 1, 43, '2025-03-02 11:01:20'),
-(2, 2, 89, '2025-02-28 04:01:46'),
-(3, 3, 177, '2025-03-02 09:54:55'),
-(4, 4, 29, '2025-02-20 13:10:40'),
-(5, 5, 66, '2025-02-21 01:22:01');
+INSERT INTO `inventory` (`inventory_id`, `stall_id`, `product_id`, `quantity`, `expiry_date`, `last_updated`) VALUES
+(1, 0, 1, 43, '2025-03-12 00:42:29', '2025-03-02 11:01:20'),
+(2, 0, 2, 89, '2025-03-12 00:42:29', '2025-02-28 04:01:46'),
+(3, 0, 3, 177, '2025-03-12 00:42:29', '2025-03-02 09:54:55'),
+(4, 0, 4, 29, '2025-03-12 00:42:29', '2025-02-20 13:10:40'),
+(5, 0, 5, 66, '2025-03-12 00:42:29', '2025-02-21 01:22:01');
 
 -- --------------------------------------------------------
 
@@ -130,31 +148,32 @@ INSERT INTO `menu_items` (`item_id`, `name`, `price`, `category`, `availability`
 CREATE TABLE `orders` (
   `order_id` varchar(50) NOT NULL,
   `user_id` int(11) NOT NULL,
+  `stall_id` int(11) NOT NULL,
   `total_price` decimal(10,2) NOT NULL,
   `order_date` timestamp NOT NULL DEFAULT current_timestamp(),
-  `status` enum('Pending','Completed','Canceled') DEFAULT 'Pending'
+  `order_status` enum('Pending','Completed','Cancelled','Ready-for-Pickup','Partially Completed','Preparing') DEFAULT 'Pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`order_id`, `user_id`, `total_price`, `order_date`, `status`) VALUES
-('ORDER_67b729d0000a00.79837591', 1, 9.98, '2025-02-20 13:10:40', 'Pending'),
-('ORDER_67b729da8ec268.39575638', 1, 4.50, '2025-02-20 13:10:50', 'Canceled'),
-('ORDER_67b732cdde3a30.48020126', 1, 1.50, '2025-02-20 13:49:01', ''),
-('ORDER_67b7d49e4e5f71.05682525', 1, 7.49, '2025-02-21 01:19:26', ''),
-('ORDER_67b7d5396f1d13.39117098', 1, 22.41, '2025-02-21 01:22:01', 'Pending'),
-('ORDER_67b7d6337e1f40.69251557', 1, 29.93, '2025-02-21 01:26:11', 'Pending'),
-('ORDER_67b7dae517d179.85585574', 2, 7.50, '2025-02-21 01:46:13', 'Pending'),
-('ORDER_67b7ec30719de5.72521993', 2, 5.99, '2025-02-21 03:00:00', 'Pending'),
-('ORDER_67c1352adf30c4.98216851', 6, 11.96, '2025-02-28 04:01:46', 'Pending'),
-('ORDER_67c42aefd3ff28.57286805', 1, 1.50, '2025-03-02 09:54:55', 'Pending'),
-('ORDER_67c43802b22438.44873278', 1, 5.99, '2025-03-02 10:50:42', 'Canceled'),
-('ORDER_67c43a8026f036.63167700', 1, 5.99, '2025-03-02 11:01:20', 'Canceled'),
-('ORDER_67ca47aa5c042', 1, 19.92, '2025-03-07 01:11:06', 'Pending'),
-('ORDER_67ca47dfa2a11', 1, 20.93, '2025-03-07 01:11:59', 'Canceled'),
-('ORDER_67ca8a9a1f1cb', 1, 2.99, '2025-03-07 05:56:42', 'Pending');
+INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_date`, `order_status`) VALUES
+('ORDER_67b729d0000a00.79837591', 1, 0, 9.98, '2025-02-20 13:10:40', 'Pending'),
+('ORDER_67b729da8ec268.39575638', 1, 0, 4.50, '2025-02-20 13:10:50', ''),
+('ORDER_67b732cdde3a30.48020126', 1, 0, 1.50, '2025-02-20 13:49:01', ''),
+('ORDER_67b7d49e4e5f71.05682525', 1, 0, 7.49, '2025-02-21 01:19:26', ''),
+('ORDER_67b7d5396f1d13.39117098', 1, 0, 22.41, '2025-02-21 01:22:01', 'Pending'),
+('ORDER_67b7d6337e1f40.69251557', 1, 0, 29.93, '2025-02-21 01:26:11', 'Pending'),
+('ORDER_67b7dae517d179.85585574', 2, 0, 7.50, '2025-02-21 01:46:13', 'Pending'),
+('ORDER_67b7ec30719de5.72521993', 2, 0, 5.99, '2025-02-21 03:00:00', 'Pending'),
+('ORDER_67c1352adf30c4.98216851', 6, 0, 11.96, '2025-02-28 04:01:46', 'Pending'),
+('ORDER_67c42aefd3ff28.57286805', 1, 0, 1.50, '2025-03-02 09:54:55', 'Pending'),
+('ORDER_67c43802b22438.44873278', 1, 0, 5.99, '2025-03-02 10:50:42', ''),
+('ORDER_67c43a8026f036.63167700', 1, 0, 5.99, '2025-03-02 11:01:20', ''),
+('ORDER_67ca47aa5c042', 1, 0, 19.92, '2025-03-07 01:11:06', 'Pending'),
+('ORDER_67ca47dfa2a11', 1, 0, 20.93, '2025-03-07 01:11:59', ''),
+('ORDER_67ca8a9a1f1cb', 1, 0, 2.99, '2025-03-07 05:56:42', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -168,23 +187,24 @@ CREATE TABLE `order_details` (
   `item_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL,
-  `price` decimal(10,2) NOT NULL
+  `unit_price` decimal(10,2) NOT NULL,
+  `status` enum('Preparing','Ready','Cancelled','') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `order_details`
 --
 
-INSERT INTO `order_details` (`order_detail_id`, `order_id`, `item_id`, `quantity`, `subtotal`, `price`) VALUES
-(1, 'ORDER_67b729d0000a00.79837591', 1, 2, 11.98, 5.99),
-(2, 'ORDER_67b729d0000a00.79837591', 2, 1, 2.99, 2.99),
-(3, 'ORDER_67b729da8ec268.39575638', 3, 3, 4.50, 1.50),
-(4, 'ORDER_67b732cdde3a30.48020126', 3, 1, 1.50, 1.50),
-(5, 'ORDER_67b7d49e4e5f71.05682525', 1, 1, 5.99, 5.99),
-(6, 'ORDER_67b7d49e4e5f71.05682525', 5, 1, 1.50, 1.50),
-(7, 'ORDER_67ca47aa5c042', 5, 8, 19.92, 2.49),
-(8, 'ORDER_67ca47dfa2a11', 2, 7, 20.93, 2.99),
-(9, 'ORDER_67ca8a9a1f1cb', 2, 1, 2.99, 2.99);
+INSERT INTO `order_details` (`order_detail_id`, `order_id`, `item_id`, `quantity`, `subtotal`, `unit_price`, `status`) VALUES
+(1, 'ORDER_67b729d0000a00.79837591', 1, 2, 11.98, 5.99, 'Preparing'),
+(2, 'ORDER_67b729d0000a00.79837591', 2, 1, 2.99, 2.99, 'Preparing'),
+(3, 'ORDER_67b729da8ec268.39575638', 3, 3, 4.50, 1.50, 'Preparing'),
+(4, 'ORDER_67b732cdde3a30.48020126', 3, 1, 1.50, 1.50, 'Preparing'),
+(5, 'ORDER_67b7d49e4e5f71.05682525', 1, 1, 5.99, 5.99, 'Preparing'),
+(6, 'ORDER_67b7d49e4e5f71.05682525', 5, 1, 1.50, 1.50, 'Preparing'),
+(7, 'ORDER_67ca47aa5c042', 5, 8, 19.92, 2.49, 'Preparing'),
+(8, 'ORDER_67ca47dfa2a11', 2, 7, 20.93, 2.99, 'Preparing'),
+(9, 'ORDER_67ca8a9a1f1cb', 2, 1, 2.99, 2.99, 'Preparing');
 
 -- --------------------------------------------------------
 
@@ -223,6 +243,19 @@ INSERT INTO `payments` (`payment_id`, `order_id`, `user_id`, `amount`, `payment_
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `products`
+--
+
+CREATE TABLE `products` (
+  `product_id` int(11) NOT NULL,
+  `product_name` varchar(100) NOT NULL,
+  `category` enum('Condiment','Beverage','Eating Essential','') NOT NULL,
+  `unit` enum('Can','Bottle','Pack','') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `retailers`
 --
 
@@ -248,7 +281,7 @@ INSERT INTO `retailers` (`retailer_id`, `user_id`, `stall_id`) VALUES
 
 CREATE TABLE `stalls` (
   `stall_id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
+  `stall_name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
   `image_path` varchar(255) NOT NULL DEFAULT 'default_stall.jpg'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -257,7 +290,7 @@ CREATE TABLE `stalls` (
 -- Dumping data for table `stalls`
 --
 
-INSERT INTO `stalls` (`stall_id`, `name`, `description`, `image_path`) VALUES
+INSERT INTO `stalls` (`stall_id`, `stall_name`, `description`, `image_path`) VALUES
 (1, 'Bonapetite', 'Delicious Burgers and Fries', 'images/store1.jpg'),
 (2, 'Kael', 'Fresh Drinks and Juices', 'images/store2.jpg'),
 (3, 'asfdfg', 'Tasty Snacks and Desserts', 'images/store3.jpg'),
@@ -332,6 +365,14 @@ ALTER TABLE `feedback`
   ADD KEY `stall_id` (`stall_id`);
 
 --
+-- Indexes for table `food_storage`
+--
+ALTER TABLE `food_storage`
+  ADD PRIMARY KEY (`storage_id`),
+  ADD KEY `stall_id` (`stall_id`),
+  ADD KEY `item_id` (`item_id`);
+
+--
 -- Indexes for table `gcash_accounts`
 --
 ALTER TABLE `gcash_accounts`
@@ -343,7 +384,8 @@ ALTER TABLE `gcash_accounts`
 --
 ALTER TABLE `inventory`
   ADD PRIMARY KEY (`inventory_id`),
-  ADD KEY `item_id` (`item_id`);
+  ADD KEY `item_id` (`product_id`),
+  ADD KEY `connect_stall` (`stall_id`);
 
 --
 -- Indexes for table `menu_items`
@@ -357,7 +399,8 @@ ALTER TABLE `menu_items`
 --
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`order_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `connect_stall` (`stall_id`);
 
 --
 -- Indexes for table `order_details`
@@ -373,6 +416,12 @@ ALTER TABLE `order_details`
 ALTER TABLE `payments`
   ADD PRIMARY KEY (`payment_id`),
   ADD KEY `order_id` (`order_id`);
+
+--
+-- Indexes for table `products`
+--
+ALTER TABLE `products`
+  ADD PRIMARY KEY (`product_id`);
 
 --
 -- Indexes for table `retailers`
@@ -404,13 +453,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `feedback`
 --
 ALTER TABLE `feedback`
   MODIFY `feedback_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `food_storage`
+--
+ALTER TABLE `food_storage`
+  MODIFY `storage_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `gcash_accounts`
@@ -441,6 +496,12 @@ ALTER TABLE `order_details`
 --
 ALTER TABLE `payments`
   MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `products`
+--
+ALTER TABLE `products`
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `retailers`
@@ -482,7 +543,7 @@ ALTER TABLE `feedback`
 -- Constraints for table `inventory`
 --
 ALTER TABLE `inventory`
-  ADD CONSTRAINT `inventory_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `menu_items` (`item_id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `inventory_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `menu_items` (`item_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `menu_items`

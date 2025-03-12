@@ -5,24 +5,196 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stall Management</title>
     <link href="../../css/styles.css" rel="stylesheet" />
+    <style>
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #343a40; /* Dark background */
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px; /* Fixed header height */
+            z-index: 1000; /* Ensure header is above other content */
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .stall-name {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+        .username {
+            font-size: 1.1em;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-top: 80px; /* Add margin to avoid overlap with the header */
+            padding: 20px;
+        }
+
+        /* Dashboard Metrics */
+        .dashboard-metrics {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .dashboard-metrics .metric-card {
+            flex: 1;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .dashboard-metrics .metric-card h3 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        .dashboard-metrics .metric-card p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            margin-bottom: 20px;
+        }
+        .quick-actions .action-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        /* Recent Activity */
+        .recent-activity {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .recent-activity h2 {
+            margin-top: 0;
+        }
+        .recent-activity ul {
+            list-style: none;
+            padding: 0;
+        }
+        .recent-activity ul li {
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .recent-activity ul li:last-child {
+            border-bottom: none;
+        }
+
+        /* Debug Session Data */
+        .session-data {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
 <?php 
+ob_start();
 session_start();
-include '../rheader.php'; 
+include '../sidepanel.php'; 
 include '../../config.php';
-if (!isset($_SESSION['user_id']) && $_SESSION['role'] != 'Retailer' && $_SESSION['stall_id'] != 9) {
+
+// Check if the user is logged in and has the correct role and stall ID
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['stall_id']) || $_SESSION['role'] != 'Retailer' || $_SESSION['stall_id'] != 9) {
     header("Location: ../../auth/login.php");
     exit();
 }
+
+// Fetch the stall name from the `stalls` table
+$stall_name = "Unknown Stall"; // Default value
+$user_id = $_SESSION['user_id']; // Get the logged-in user's ID
+$stall_sql = "SELECT s.stall_name FROM stalls s inner join retailers r on s.stall_id = r.stall_id where r.user_id = ?";
+$stall_stmt = $con->prepare($stall_sql);
+$stall_stmt->bind_param("i", $user_id);
+$stall_stmt->execute();
+$stall_result = $stall_stmt->get_result();
+
+if ($stall_result->num_rows > 0) {
+    $stall = $stall_result->fetch_assoc();
+    $stall_name = $stall['stall_name']; // Get the stall name
+}
+$stall_stmt->close();
 ?>
 
-<div class="main-content">
-        <!-- Your main content goes here -->
-        <h1>Welcome to Stall Management</h1>
-        <p>This is the main content area.</p>
-        <h1><?php echo $_SESSION['stall_id']; echo $_SESSION['user_id'] ?></h1>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <span class="stall-name"><?php echo htmlspecialchars($stall_name); ?></span> <!-- Name of the Stall -->
+        </div>
+        <div class="header-right">
+            <span class="username"><?php echo htmlspecialchars($_SESSION['name']); ?></span> <!-- Logged-in User's Name -->
+        </div>
     </div>
 
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Metrics -->
+        <div class="dashboard-metrics">
+            <div class="metric-card">
+                <h3>150</h3>
+                <p>Total Orders</p>
+            </div>
+            <div class="metric-card">
+                <h3>$1,200</h3>
+                <p>Total Revenue</p>
+            </div>
+            <div class="metric-card">
+                <h3>25</h3>
+                <p>Pending Orders</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="action-btn">Add New Item</button>
+            <button class="action-btn">View Reports</button>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+            <h2>Recent Activity</h2>
+            <ul>
+                <li>Order #1234 placed by John Doe</li>
+                <li>Order #1235 placed by Jane Smith</li>
+                <li>New menu item added: Burger</li>
+                <li>Settings updated: Payment methods</li>
+            </ul>
+        </div>
+
+        <!-- Debug Session Data -->
+        <div class="session-data">
+            <h3>Session Data</h3>
+            <p>Stall ID: <?php echo htmlspecialchars($_SESSION['stall_id']); ?></p>
+            <p>User ID: <?php echo htmlspecialchars($_SESSION['user_id']); ?></p>
+        </div>
+    </div>
 </body>
 </html>
