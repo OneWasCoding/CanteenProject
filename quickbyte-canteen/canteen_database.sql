@@ -3,7 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
+<<<<<<< HEAD
 -- Generation Time: Mar 15, 2025 at 09:18 AM
+=======
+-- Generation Time: Mar 15, 2025 at 06:30 AM
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -29,7 +33,10 @@ USE `canteen_database`;
 -- Table structure for table `cart`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `cart`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `cart` (
   `cart_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -38,7 +45,11 @@ CREATE TABLE IF NOT EXISTS `cart` (
   PRIMARY KEY (`cart_id`),
   KEY `user_id` (`user_id`),
   KEY `item_id` (`item_id`)
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 
 --
 -- Dumping data for table `cart`
@@ -56,7 +67,10 @@ INSERT INTO `cart` (`cart_id`, `user_id`, `item_id`, `quantity`) VALUES
 -- Table structure for table `feedback`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `feedback`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `feedback` (
   `feedback_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -67,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `feedback` (
   PRIMARY KEY (`feedback_id`),
   KEY `user_id` (`user_id`),
   KEY `stall_id` (`stall_id`)
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -75,6 +90,9 @@ CREATE TABLE IF NOT EXISTS `feedback` (
 
 INSERT INTO `feedback` (`feedback_id`, `user_id`, `stall_id`, `rating`, `comment`, `created_at`) VALUES
 (5, 17, 1, 5, 'this is nice', '2025-03-15 07:32:19');
+=======
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 
 -- --------------------------------------------------------
 
@@ -82,7 +100,10 @@ INSERT INTO `feedback` (`feedback_id`, `user_id`, `stall_id`, `rating`, `comment
 -- Table structure for table `food_storage`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `food_storage`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `food_storage` (
   `storage_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_id` int(11) NOT NULL,
@@ -93,6 +114,7 @@ CREATE TABLE IF NOT EXISTS `food_storage` (
   PRIMARY KEY (`storage_id`),
   KEY `stall_id` (`stall_id`),
   KEY `item_id` (`item_id`)
+<<<<<<< HEAD
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -109,6 +131,8 @@ CREATE TABLE IF NOT EXISTS `gcash_payment_details` (
   `gcash_image_path` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `order_id` (`order_id`)
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -117,14 +141,23 @@ CREATE TABLE IF NOT EXISTS `gcash_payment_details` (
 -- Table structure for table `inventory`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `inventory`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `inventory` (
   `inventory_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
+<<<<<<< HEAD
   `expiry_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+=======
+  `expiry_date` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `last_updated` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
   PRIMARY KEY (`inventory_id`),
   KEY `item_id` (`product_id`),
   KEY `connect_stall` (`stall_id`)
@@ -134,12 +167,12 @@ CREATE TABLE IF NOT EXISTS `inventory` (
 -- Dumping data for table `inventory`
 --
 
-INSERT INTO `inventory` (`inventory_id`, `stall_id`, `product_id`, `quantity`, `expiry_date`, `last_updated`) VALUES
-(1, 0, 1, 43, '2025-03-12 00:42:29', '2025-03-02 11:01:20'),
-(2, 0, 2, 89, '2025-03-12 00:42:29', '2025-02-28 04:01:46'),
-(3, 0, 3, 177, '2025-03-12 00:42:29', '2025-03-02 09:54:55'),
-(4, 0, 4, 29, '2025-03-12 00:42:29', '2025-02-20 13:10:40'),
-(5, 0, 5, 66, '2025-03-12 00:42:29', '2025-02-21 01:22:01');
+INSERT INTO `inventory` (`inventory_id`, `stall_id`, `product_id`, `quantity`, `expiry_date`, `last_updated`, `created_at`) VALUES
+(1, 0, 1, 43, '2025-03-12 00:42:29', '2025-03-02 11:01:20', '2025-03-15 03:48:05'),
+(2, 0, 2, 89, '2025-03-12 00:42:29', '2025-02-28 04:01:46', '2025-03-15 03:48:05'),
+(3, 0, 3, 177, '2025-03-12 00:42:29', '2025-03-02 09:54:55', '2025-03-15 03:48:05'),
+(4, 0, 4, 29, '2025-03-12 00:42:29', '2025-02-20 13:10:40', '2025-03-15 03:48:05'),
+(5, 0, 5, 66, '2025-03-12 00:42:29', '2025-02-21 01:22:01', '2025-03-15 03:48:05');
 
 -- --------------------------------------------------------
 
@@ -147,7 +180,10 @@ INSERT INTO `inventory` (`inventory_id`, `stall_id`, `product_id`, `quantity`, `
 -- Table structure for table `menu_items`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `menu_items`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `menu_items` (
   `item_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
@@ -178,7 +214,10 @@ INSERT INTO `menu_items` (`item_id`, `name`, `price`, `category`, `availability`
 -- Table structure for table `orders`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `orders`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` varchar(50) NOT NULL,
   `user_id` int(11) NOT NULL,
@@ -202,7 +241,11 @@ INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_d
 ('ORDER_67b7d49e4e5f71.05682525', 1, 0, 7.49, '2025-02-21 01:19:26', ''),
 ('ORDER_67b7d5396f1d13.39117098', 1, 9, 22.41, '2025-02-21 01:22:01', 'Completed'),
 ('ORDER_67b7d6337e1f40.69251557', 1, 8, 29.93, '2025-02-21 01:26:11', 'Cancelled'),
+<<<<<<< HEAD
 ('ORDER_67b7dae517d179.85585574', 2, 0, 7.50, '2025-02-21 01:46:13', 'Pending'),
+=======
+('ORDER_67b7dae517d179.85585574', 2, 9, 7.50, '2025-02-21 01:46:13', 'Completed'),
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 ('ORDER_67b7ec30719de5.72521993', 2, 0, 5.99, '2025-02-21 03:00:00', 'Pending'),
 ('ORDER_67c1352adf30c4.98216851', 6, 0, 11.96, '2025-02-28 04:01:46', 'Pending'),
 ('ORDER_67c42aefd3ff28.57286805', 1, 0, 1.50, '2025-03-02 09:54:55', 'Pending'),
@@ -221,7 +264,10 @@ INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_d
 -- Table structure for table `order_details`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `order_details`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `order_details` (
   `order_detail_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
@@ -233,7 +279,11 @@ CREATE TABLE IF NOT EXISTS `order_details` (
   PRIMARY KEY (`order_detail_id`),
   KEY `order_id` (`order_id`),
   KEY `item_id` (`item_id`)
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 
 --
 -- Dumping data for table `order_details`
@@ -259,7 +309,10 @@ INSERT INTO `order_details` (`order_detail_id`, `order_id`, `item_id`, `quantity
 -- Table structure for table `payments`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `payments`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `payments` (
   `payment_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
@@ -270,7 +323,11 @@ CREATE TABLE IF NOT EXISTS `payments` (
   `payment_date` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`payment_id`),
   KEY `order_id` (`order_id`)
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 
 --
 -- Dumping data for table `payments`
@@ -299,7 +356,10 @@ INSERT INTO `payments` (`payment_id`, `order_id`, `user_id`, `amount`, `payment_
 -- Table structure for table `products`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `products`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `products` (
   `product_id` int(11) NOT NULL AUTO_INCREMENT,
   `product_name` varchar(100) NOT NULL,
@@ -342,14 +402,21 @@ INSERT INTO `receipts` (`receipt_id`, `order_id`, `user_id`, `receipt_date`, `to
 -- Table structure for table `retailers`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `retailers`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `retailers` (
   `retailer_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `stall_id` int(11) NOT NULL,
   PRIMARY KEY (`retailer_id`),
   KEY `user_id` (`user_id`)
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 
 --
 -- Dumping data for table `retailers`
@@ -366,7 +433,10 @@ INSERT INTO `retailers` (`retailer_id`, `user_id`, `stall_id`) VALUES
 -- Table structure for table `stalls`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `stalls`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `stalls` (
   `stall_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_name` varchar(100) NOT NULL,
@@ -400,7 +470,10 @@ INSERT INTO `stalls` (`stall_id`, `stall_name`, `description`, `image_path`) VAL
 -- Table structure for table `users`
 --
 
+<<<<<<< HEAD
 DROP TABLE IF EXISTS `users`;
+=======
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 CREATE TABLE IF NOT EXISTS `users` (
   `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
@@ -417,7 +490,11 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `email_unique` (`email_unique`),
   UNIQUE KEY `unique_email_constraint` (`email`,`role`)
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 
 --
 -- Dumping data for table `users`
@@ -436,9 +513,13 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `role`, `balance`, 
 (12, 'Allan', 'a@gmail.com', '$2y$10$jS3SFUAO0CMTvBPaAO0hveeKYWM7K3EmGcNZBxW9v/FEd3dewbAQS', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (13, 'Levi', 'l@gmail.com', '$2y$10$HlFlEWdBU7GbnX2k.70u7ujLB1hpJ8T.mRNuDd3MS2VKcNKQglxaa', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (14, 'bor', 'borjabisaya@gmail.com', '$2y$10$CSxsLT/j4yOHoyTD8vBuKO0QvYbOhPVPq90aIHs6jHiLIQ4b8aeMK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+<<<<<<< HEAD
 (15, 'Melvs', 'w@gmail.com', '$2y$10$OdI59Cgo1bxHCpANUlNYBOgjZ/EpR40uSaQNXmGfPX.IMSnT0RZBK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (16, 'egoego123', 'allanmonforte123123@gmail.com', '$2y$10$5AGxDcKxfzFRckmgkTyWU.VdIsQ7uFtvV9JzO.oqXYnlz3ZYOPNMK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (17, 'melvinbisaya', 'melvin@bisaya.com', '$2y$10$xkpROALC3SW4RlqJMFdTR.QJkX1WTIoOEiPHTbwxQLL5h/ENyhFfm', 'Student', 0.00, '123', '123', 1, 'images/profiles/476974947_598964489616296_4802757199467559226_n.png');
+=======
+(15, 'Melvs', 'w@gmail.com', '$2y$10$OdI59Cgo1bxHCpANUlNYBOgjZ/EpR40uSaQNXmGfPX.IMSnT0RZBK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg');
+>>>>>>> e0bd62895dedfea191d119eae1ca247c083a4829
 
 --
 -- Constraints for dumped tables
