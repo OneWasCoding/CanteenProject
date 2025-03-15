@@ -16,8 +16,8 @@ if (!isset($_GET['stall_id']) || empty($_GET['stall_id'])) {
 
 $stall_id = $_GET['stall_id'];
 
-// Fetch stall details
-$sql_stall = "SELECT name, description, image_path FROM stalls WHERE stall_id = ?";
+// Fetch stall details using the correct column name "stall_name"
+$sql_stall = "SELECT stall_name, description, image_path FROM stalls WHERE stall_id = ?";
 $stmt_stall = $con->prepare($sql_stall);
 $stmt_stall->bind_param("i", $stall_id);
 $stmt_stall->execute();
@@ -47,9 +47,9 @@ $sort_order = isset($_GET['sort']) ? $_GET['sort'] : 'default';
 
 // Build the SQL query based on the selected category and sort order
 $sql = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity_in_stock
+    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity AS quantity_in_stock
     FROM menu_items m
-    LEFT JOIN inventory i ON m.item_id = i.item_id
+    LEFT JOIN inventory i ON m.item_id = i.product_id
     WHERE m.stall_id = ? AND m.availability = 1
 ";
 
@@ -68,7 +68,7 @@ switch ($sort_order) {
     case 'name_a_to_z':
         $sql .= " ORDER BY m.name ASC";
         break;
-     case 'name_z_to_a':
+    case 'name_z_to_a':
         $sql .= " ORDER BY m.name DESC";
         break;
     default:
@@ -78,13 +78,11 @@ switch ($sort_order) {
 
 // Prepare and execute the query
 $stmt = $con->prepare($sql);
-
 if ($category_filter !== 'all') {
     $stmt->bind_param("is", $stall_id, $category_filter);
 } else {
     $stmt->bind_param("i", $stall_id);
 }
-
 $stmt->execute();
 $result = $stmt->get_result();
 $menuItems = $result->fetch_all(MYSQLI_ASSOC);
@@ -96,33 +94,29 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($stall['name']); ?> - QuickByte Canteen</title>
+    <title><?php echo htmlspecialchars($stall['stall_name']); ?> - QuickByte Canteen</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Font Awesome Icons (Consider using Bootstrap Icons instead) -->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> -->
     <style>
         body {
             background-color: #f8f9fa;
             font-family: 'Poppins', sans-serif;
             display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Ensure the body takes up at least the full viewport height */
+            min-height: 100vh;
         }
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .navbar-brand {
-            font-weight: bold; /* Make the brand more prominent */
-        }
+        .navbar-brand { font-weight: bold; }
         .dropdown-menu {
             background-color: #fff;
             border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .dropdown-item {
             color: #333;
@@ -146,27 +140,21 @@ $stmt->close();
             padding: 10px 20px;
             cursor: pointer;
             transition: opacity 0.3s ease;
-            text-decoration: none; /* Remove underlines from links */
+            text-decoration: none;
         }
-        .filter-button:hover {
-            opacity: 0.8;
-        }
-        .filter-button.active {
-            background-color: #c63e1e; /* Darker shade for active button */
-        }
+        .filter-button:hover { opacity: 0.8; }
+        .filter-button.active { background-color: #c63e1e; }
         .menu-item {
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             transition: transform 0.3s ease;
             padding: 1rem;
             display: flex;
             flex-direction: column;
-            height: 100%; /* Make sure all items have the same height */
+            height: 100%;
         }
-        .menu-item:hover {
-            transform: translateY(-5px);
-        }
+        .menu-item:hover { transform: translateY(-5px); }
         .menu-item img {
             max-width: 100%;
             height: 150px;
@@ -176,12 +164,10 @@ $stmt->close();
             cursor: pointer;
             transition: transform 0.3s ease;
         }
-        .menu-item img:hover {
-            transform: scale(1.05);
-        }
+        .menu-item img:hover { transform: scale(1.05); }
         .menu-item .card-body {
-            flex-grow: 1; /* Allow content to take up available space */
-            text-align: center; /* Center content within the card */
+            flex-grow: 1;
+            text-align: center;
         }
         .stock-info {
             margin-bottom: 0.5rem;
@@ -197,11 +183,9 @@ $stmt->close();
             cursor: pointer;
             transition: opacity 0.3s ease;
             width: 100%;
-            margin-top: auto; /* Push the button to the bottom */
+            margin-top: auto;
         }
-        .btn-add-cart:hover {
-            opacity: 0.8;
-        }
+        .btn-add-cart:hover { opacity: 0.8; }
         .btn-sold-out {
             background-color: transparent;
             border: 1px solid #ccc;
@@ -211,26 +195,6 @@ $stmt->close();
             cursor: not-allowed;
             width: 100%;
             margin-top: auto;
-        }
-        .dropdown-menu {
-            background-color: #fff;
-            border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .dropdown-item {
-            color: #333;
-            transition: all 0.3s ease;
-        }
-        .dropdown-item:hover {
-            background-color: #e44d26;
-            color: white;
-        }
-        footer {
-            background: linear-gradient(135deg, #e44d26, #ff7f50);
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
-            margin-top: auto; /* Push the footer to the bottom */
         }
         .sorting-options {
             margin-bottom: 2rem;
@@ -242,13 +206,8 @@ $stmt->close();
             color: #333;
             transition: color 0.3s ease;
         }
-        .sorting-options a:hover {
-            color: #e44d26;
-        }
-        .sorting-options a.active {
-            color: #e44d26;
-            font-weight: bold;
-        }
+        .sorting-options a:hover { color: #e44d26; }
+        .sorting-options a.active { color: #e44d26; font-weight: bold; }
         .stall-header {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
@@ -256,46 +215,33 @@ $stmt->close();
             padding: 2rem 0;
             margin-bottom: 2rem;
         }
-        .stall-header h2 {
-            font-size: 2.5rem;
-            font-weight: bold;
-        }
-        .stall-header p {
-            font-size: 1.2rem;
-        }
+        .stall-header h2 { font-size: 2.5rem; font-weight: bold; }
+        .stall-header p { font-size: 1.2rem; }
     </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php"><i class="bi bi-shop"></i> QuickByte Canteen</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Home
-                        </a>
+                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">Home</a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="food.php">Food Items</a></li>
                             <li><a class="dropdown-item" href="stalls.php">Stalls</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a></li>
+                    <li class="nav-item"><a class="nav-link" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -304,12 +250,12 @@ $stmt->close();
     <!-- Stall Header -->
     <section class="stall-header">
         <div class="container">
-            <h2><?php echo htmlspecialchars($stall['name']); ?></h2>
+            <h2><?php echo htmlspecialchars($stall['stall_name']); ?></h2>
             <p><?php echo htmlspecialchars($stall['description']); ?></p>
         </div>
     </section>
 
-    <!-- Filter Buttons -->
+    <!-- Filter & Sorting Section -->
     <section class="container mt-4">
         <div class="filter-buttons">
             <a href="?stall_id=<?php echo $stall_id; ?>&category=all" class="filter-button <?php echo $category_filter === 'all' ? 'active' : ''; ?>">All</a>
@@ -319,7 +265,6 @@ $stmt->close();
                 </a>
             <?php endforeach; ?>
         </div>
-
         <!-- Sorting Options -->
         <div class="sorting-options">
             <span>Sort by:</span>
@@ -331,7 +276,7 @@ $stmt->close();
         </div>
     </section>
 
-    <!-- Menu Items -->
+    <!-- Menu Items Section -->
     <section class="container mt-4">
         <div class="row">
             <?php if (!empty($menuItems)): ?>
@@ -341,7 +286,7 @@ $stmt->close();
                             <img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
                             <div class="card-body">
                                 <h4><?php echo htmlspecialchars($item['name']); ?></h4>
-                                <p><strong>Price:</strong> $<?php echo number_format($item['price'], 2); ?></p>
+                                <p><strong>Price:</strong> ₱<?php echo number_format($item['price'], 2); ?></p>
                                 <p><strong>Category:</strong> <?php echo htmlspecialchars($item['category']); ?></p>
                                 <p class="stock-info">
                                     <?php if ($item['quantity_in_stock'] > 0): ?>
@@ -350,13 +295,14 @@ $stmt->close();
                                         <strong>Sold Out</strong>
                                     <?php endif; ?>
                                 </p>
-                                <button
-                                    class="<?php echo $item['quantity_in_stock'] > 0 ? 'btn-add-cart' : 'btn-sold-out'; ?>"
-                                    onclick="addToCart(<?php echo $item['item_id']; ?>)"
-                                    <?php echo $item['quantity_in_stock'] <= 0 ? 'disabled' : ''; ?>
-                                >
+                                <button class="<?php echo $item['quantity_in_stock'] > 0 ? 'btn-add-cart' : 'btn-sold-out'; ?>"
+                                    onclick="addToCart(<?php echo $item['item_id']; ?>)" <?php echo $item['quantity_in_stock'] <= 0 ? 'disabled' : ''; ?>>
                                     <?php echo $item['quantity_in_stock'] > 0 ? '<i class="bi bi-cart-plus"></i> Add to Cart' : 'Sold Out'; ?>
                                 </button>
+                                <!-- View Details Button -->
+                                <a href="product_details.php?item_id=<?php echo $item['item_id']; ?>" class="btn btn-primary w-100 mt-2">
+                                    <i class="bi bi-info-circle"></i> View Details
+                                </a>
                             </div>
                         </div>
                     </div>

@@ -8,8 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Fetch all stalls
-$sql = "SELECT stall_id, name, description, image_path FROM stalls";
+// Fetch all stalls using the correct column name "stall_name"
+$sql = "SELECT stall_id, stall_name, description, image_path FROM stalls";
 $stmt = $con->prepare($sql);
 
 if (!$stmt) {
@@ -43,7 +43,7 @@ $stmt->close();
             font-family: 'Poppins', sans-serif;
             display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Ensure the body takes up at least the full viewport height */
+            min-height: 100vh;
         }
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
@@ -51,7 +51,7 @@ $stmt->close();
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         .navbar-brand {
-            font-weight: bold; /* Make the brand more prominent */
+            font-weight: bold;
         }
         .dropdown-menu {
             background-color: #fff;
@@ -84,6 +84,7 @@ $stmt->close();
             object-fit: cover;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
+            width: 100%;
         }
         .stall-card .card-body {
             flex-grow: 1;
@@ -118,7 +119,7 @@ $stmt->close();
             color: white;
             text-align: center;
             padding: 1rem 0;
-            margin-top: auto; /* Push the footer to the bottom */
+            margin-top: auto;
         }
         .hero-section {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
@@ -133,17 +134,19 @@ $stmt->close();
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <!-- Navbar (same as your reviews page) -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php"><i class="bi bi-shop"></i> QuickByte Canteen</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             Home
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -182,11 +185,11 @@ $stmt->close();
                 <?php foreach ($stalls as $stall): ?>
                     <div class="col-md-4 mb-4">
                         <div class="stall-card">
-                            <img src="<?php echo htmlspecialchars($stall['image_path']); ?>" alt="<?php echo htmlspecialchars($stall['name']); ?>">
+                            <img src="<?php echo htmlspecialchars($stall['image_path']); ?>" alt="<?php echo htmlspecialchars($stall['stall_name']); ?>">
                             <div class="card-body">
-                                <h5><?php echo htmlspecialchars($stall['name']); ?></h5>
+                                <h5><?php echo htmlspecialchars($stall['stall_name']); ?></h5>
                                 <p><?php echo htmlspecialchars($stall['description'] ?? 'No description available.'); ?></p>
-                                <a href="food_items.php?stall_id=<?php echo $stall['stall_id']; ?>" class="btn btn-view-menu">
+                                <a href="food_items.php?stall_id=<?php echo $stall['stall_id']; ?>" class="btn-view-menu">
                                     <i class="bi bi-utensils"></i> View Menu
                                 </a>
                             </div>

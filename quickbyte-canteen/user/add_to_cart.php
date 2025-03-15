@@ -10,7 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
 
     // Check if the item exists in inventory and has sufficient stock
-    $sql = "SELECT quantity_in_stock FROM inventory WHERE item_id = ?";
+    // Updated: Use 'quantity' and compare using 'product_id'
+    $sql = "SELECT quantity FROM inventory WHERE product_id = ?";
     $stmt = $con->prepare($sql);
     $stmt->bind_param("i", $item_id);
     $stmt->execute();
@@ -18,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inventory = $result->fetch_assoc();
     $stmt->close();
 
-    if (!$inventory || $inventory['quantity_in_stock'] <= 0) {
+    if (!$inventory || $inventory['quantity'] <= 0) {
         echo json_encode(['success' => false, 'message' => 'Item is out of stock.']);
         exit();
     }

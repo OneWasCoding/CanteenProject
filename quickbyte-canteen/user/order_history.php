@@ -11,12 +11,12 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 
-// Handle cancel order action
+// Handle cancel order action for orders that are "Partially Completed"
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     $order_id = $_POST['order_id'];
-
-    // Update order status to "Canceled"
-    $sql_cancel = "UPDATE orders SET status = 'Canceled' WHERE order_id = ? AND user_id = ?";
+    
+    // Update order status to "Cancelled" only if it's currently "Partially Completed"
+    $sql_cancel = "UPDATE orders SET order_status = 'Cancelled' WHERE order_id = ? AND user_id = ? AND order_status = 'Partially Completed'";
     $stmt_cancel = $con->prepare($sql_cancel);
     $stmt_cancel->bind_param("si", $order_id, $user_id);
 
@@ -26,24 +26,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     } else {
         echo '<script>alert("Failed to cancel the order.");</script>';
     }
-
     $stmt_cancel->close();
 }
 
-// Build the SQL query with optional status filtering
+// Base SQL query: select only orders with status Completed, Partially Completed, or Cancelled
 $sql = "
-    SELECT o.order_id, o.order_date, o.total_price, o.status,
+    SELECT o.order_id, o.order_date, o.total_price, o.order_status,
            GROUP_CONCAT(m.name SEPARATOR ', ') AS items,
            GROUP_CONCAT(od.quantity SEPARATOR ', ') AS quantities,
-           GROUP_CONCAT(od.price SEPARATOR ', ') AS prices
+           GROUP_CONCAT(od.unit_price SEPARATOR ', ') AS prices
     FROM orders o
     LEFT JOIN order_details od ON o.order_id = od.order_id
     LEFT JOIN menu_items m ON od.item_id = m.item_id
-    WHERE o.user_id = ?
+    WHERE o.user_id = ? 
+      AND o.order_status IN ('Completed','Partially Completed','Cancelled')
 ";
 
 if ($filter_status !== 'all') {
-    $sql .= " AND o.status = ?";
+    $sql .= " AND o.order_status = ?";
 }
 
 $sql .= " GROUP BY o.order_id ORDER BY o.order_date DESC";
@@ -72,7 +72,6 @@ $stmt->close();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Custom Styles -->
     <style>
         body {
             background: linear-gradient(135deg, #f8f9fa, #e4e5f1);
@@ -82,7 +81,7 @@ $stmt->close();
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         footer {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
@@ -104,13 +103,10 @@ $stmt->close();
             padding: 0.5rem 1rem;
             border-radius: 5px;
             transition: all 0.3s ease;
-            display: inline-block; /* Ensure inline display */
-            margin: 0.25rem; /* Add some spacing */
+            display: inline-block;
+            margin: 0.25rem;
         }
-        .filters a:hover {
-            background: linear-gradient(135deg, #e44d26, #ff7f50);
-            color: white;
-        }
+        .filters a:hover,
         .filters a.active {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
@@ -118,7 +114,7 @@ $stmt->close();
         .order-card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             padding: 1.5rem;
             margin-bottom: 1.5rem;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -127,6 +123,38 @@ $stmt->close();
             transform: translateY(-10px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
         }
+        .order-details p {
+            margin: 0.25rem 0;
+        }
+        .actions {
+            margin-top: 1rem;
+        }
+        .actions button,
+        .view-details-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .actions button.cancel {
+            background-color: #f44336;
+            color: white;
+        }
+        .actions button.cancel:hover {
+            background-color: #d32f2f;
+        }
+        .view-details-btn {
+            background-color: transparent;
+            border: 1px solid #333;
+            color: #333;
+        }
+        .view-details-btn:hover {
+            background-color: #333;
+            color: white;
+        }
+        /* Progress tracker styles (optional) */
         .progress-tracker {
             display: flex;
             align-items: center;
@@ -164,42 +192,12 @@ $stmt->close();
         }
         .progress {
             height: 100%;
-            width: 33.33%; /* Adjust based on active step */
+            width: 33.33%;
             background-color: #1976d2;
             transition: width 0.3s ease;
         }
-        .actions button {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 0.5rem;
-            transition: all 0.3s ease;
-        }
-        .actions button.cancel {
-            background-color: #f44336;
-            color: white;
-        }
-        .actions button.cancel:hover {
-            background-color: #d32f2f;
-        }
-        .view-details-btn {
-            background-color: transparent;
-            border: 1px solid #333;
-            color: #333;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .view-details-btn:hover {
-            background-color: #333;
-            color: white;
-        }
         @media (max-width: 768px) {
-            h2 {
-                font-size: 2rem;
-            }
+            h2 { font-size: 2rem; }
         }
     </style>
 </head>
@@ -208,32 +206,24 @@ $stmt->close();
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php"><i class="bi bi-shop"></i> QuickByte Canteen</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Home
-                        </a>
+                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">Home</a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="food.php"><i class="bi bi-egg-fried"></i> Food Items</a></li>
                             <li><a class="dropdown-item" href="stalls.php"><i class="bi bi-shop-window"></i> Stalls</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a></li>
+                    <li class="nav-item"><a class="nav-link" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -244,9 +234,9 @@ $stmt->close();
         <h2><i class="bi bi-clock-history"></i> Order History</h2>
         <div class="filters text-center mb-4">
             <a href="?status=all" class="btn <?php echo $filter_status === 'all' ? 'active' : ''; ?>"><i class="bi bi-list"></i> All Orders</a>
-            <a href="?status=Pending" class="btn <?php echo $filter_status === 'Pending' ? 'active' : ''; ?>"><i class="bi bi-hourglass-split"></i> Pending</a>
             <a href="?status=Completed" class="btn <?php echo $filter_status === 'Completed' ? 'active' : ''; ?>"><i class="bi bi-check-circle"></i> Completed</a>
-            <a href="?status=Canceled" class="btn <?php echo $filter_status === 'Canceled' ? 'active' : ''; ?>"><i class="bi bi-x-circle"></i> Cancelled</a>
+            <a href="?status=Partially Completed" class="btn <?php echo $filter_status === 'Partially Completed' ? 'active' : ''; ?>"><i class="bi bi-hourglass-split"></i> Partially Completed</a>
+            <a href="?status=Cancelled" class="btn <?php echo $filter_status === 'Cancelled' ? 'active' : ''; ?>"><i class="bi bi-x-circle"></i> Cancelled</a>
         </div>
 
         <?php if (empty($orders)): ?>
@@ -256,7 +246,7 @@ $stmt->close();
                 <div class="order-card">
                     <div class="order-header">
                         <p><strong>Order ID:</strong> <?php echo htmlspecialchars($order['order_id']); ?></p>
-                        <p><strong>Status:</strong> <?php echo htmlspecialchars($order['status']); ?></p>
+                        <p><strong>Status:</strong> <?php echo htmlspecialchars($order['order_status']); ?></p>
                     </div>
                     <div class="order-details">
                         <?php
@@ -271,37 +261,23 @@ $stmt->close();
                     </div>
                     <div class="progress-tracker">
                         <div class="step">
-                            <span class="circle <?php echo $order['status'] === 'Pending' || $order['status'] === 'Completed' || $order['status'] === 'Canceled' ? 'active' : ''; ?>">1</span>
+                            <span class="circle <?php echo in_array($order['order_status'], ['Completed', 'Partially Completed', 'Cancelled']) ? 'active' : ''; ?>">1</span>
                             <p>PLACED</p>
                         </div>
                         <div class="step">
-                            <span class="circle <?php echo $order['status'] === 'Completed' || $order['status'] === 'Canceled' ? 'active' : ''; ?>">2</span>
+                            <span class="circle <?php echo in_array($order['order_status'], ['Completed', 'Cancelled']) ? 'active' : ''; ?>">2</span>
                             <p>SHIPPED</p>
                         </div>
                         <div class="step">
-                            <span class="circle <?php echo $order['status'] === 'Completed' ? 'active' : ''; ?>">3</span>
+                            <span class="circle <?php echo $order['order_status'] === 'Completed' ? 'active' : ''; ?>">3</span>
                             <p>DELIVERED</p>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress" style="width: <?php
-                                switch ($order['status']) {
-                                    case 'Pending':
-                                        echo '33.33%';
-                                        break;
-                                    case 'Completed':
-                                        echo '100%';
-                                        break;
-                                    case 'Canceled':
-                                        echo '0%';
-                                        break;
-                                    default:
-                                        echo '0%';
-                                }
-                            ?>;"></div>
+                            <div class="progress" style="width: 100%;"></div>
                         </div>
                     </div>
                     <div class="actions">
-                        <?php if ($order['status'] === 'Pending'): ?>
+                        <?php if ($order['order_status'] === 'Partially Completed'): ?>
                             <form method="POST" style="display: inline;">
                                 <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
                                 <button type="submit" name="cancel_order" class="btn cancel"><i class="bi bi-x-circle"></i> Cancel Order</button>

@@ -2,11 +2,17 @@
 session_start();
 include '../config.php';
 
-// Fetch featured products (e.g., items with availability = 1)
+// Redirect to login if user is not logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../auth/login.php");
+    exit();
+}
+
+/* --- Existing Featured Products Query --- */
 $sql_featured = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity_in_stock
+    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity AS quantity_in_stock
     FROM menu_items m
-    LEFT JOIN inventory i ON m.item_id = i.item_id
+    LEFT JOIN inventory i ON m.item_id = i.product_id
     WHERE m.availability = 1
     ORDER BY RAND() LIMIT 6
 ";
@@ -15,6 +21,76 @@ $stmt_featured->execute();
 $result_featured = $stmt_featured->get_result();
 $featured_products = $result_featured->fetch_all(MYSQLI_ASSOC);
 $stmt_featured->close();
+
+/* --- New Query: Top Seller of Retailer --- */
+/* This query selects the retailer (user) whose stall has the highest number of orders */
+$sql_top_seller = "
+    SELECT u.user_id, u.name, COUNT(o.order_id) AS total_orders
+    FROM retailers r
+    JOIN orders o ON r.stall_id = o.stall_id
+    JOIN users u ON r.user_id = u.user_id
+    GROUP BY u.user_id
+    ORDER BY total_orders DESC
+    LIMIT 1
+";
+$stmt_top_seller = $con->prepare($sql_top_seller);
+$stmt_top_seller->execute();
+$result_top_seller = $stmt_top_seller->get_result();
+$top_seller = $result_top_seller->fetch_assoc();
+$stmt_top_seller->close();
+
+/* --- New Query: Top Store --- */
+/* This query selects the stall with the highest number of orders */
+$sql_top_store = "
+    SELECT s.stall_id, s.stall_name, COUNT(o.order_id) AS total_orders
+    FROM stalls s
+    JOIN orders o ON s.stall_id = o.stall_id
+    GROUP BY s.stall_id
+    ORDER BY total_orders DESC
+    LIMIT 1
+";
+$stmt_top_store = $con->prepare($sql_top_store);
+$stmt_top_store->execute();
+$result_top_store = $stmt_top_store->get_result();
+$top_store = $result_top_store->fetch_assoc();
+$stmt_top_store->close();
+
+/* --- New Query: Top Product --- */
+/* This query selects the product with the highest total quantity sold */
+$sql_top_product = "
+    SELECT m.item_id, m.name, m.price, m.category, m.image_path, SUM(od.quantity) AS total_sold
+    FROM order_details od
+    JOIN menu_items m ON od.item_id = m.item_id
+    GROUP BY m.item_id
+    ORDER BY total_sold DESC
+    LIMIT 1
+";
+$stmt_top_product = $con->prepare($sql_top_product);
+$stmt_top_product->execute();
+$result_top_product = $stmt_top_product->get_result();
+$top_product = $result_top_product->fetch_assoc();
+$stmt_top_product->close();
+
+/* --- New Query: Featured Product from Different Stall --- */
+/* This query selects one product per stall (using the minimum item_id per stall) */
+$sql_featured_diff = "
+    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity AS quantity_in_stock, m.stall_id
+    FROM menu_items m
+    LEFT JOIN inventory i ON m.item_id = i.product_id
+    WHERE m.availability = 1
+      AND m.item_id IN (
+          SELECT MIN(m2.item_id)
+          FROM menu_items m2
+          WHERE m2.availability = 1
+          GROUP BY m2.stall_id
+      )
+    LIMIT 6
+";
+$stmt_featured_diff = $con->prepare($sql_featured_diff);
+$stmt_featured_diff->execute();
+$result_featured_diff = $stmt_featured_diff->get_result();
+$featured_diff_products = $result_featured_diff->fetch_all(MYSQLI_ASSOC);
+$stmt_featured_diff->close();
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +111,6 @@ $stmt_featured->close();
             padding: 0;
             color: #333;
         }
-        
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
@@ -59,9 +134,9 @@ $stmt_featured->close();
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         .hero-section p {
-            color: white; /* Ensures visibility on dark backgrounds */
+            color: white;
             font-weight: bold;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7); /* Shadow effect */
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
             font-size: 1.5rem;
             margin-top: 1rem;
         }
@@ -82,16 +157,11 @@ $stmt_featured->close();
             left: 0;
             width: 100%;
             height: 100vh;
-            z-index: -1; /* Behind content */
+            z-index: -1;
         }
-        /* Blob Animation CSS */
         @keyframes rotate {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         .out-top {
             animation: rotate 20s linear infinite;
@@ -109,7 +179,6 @@ $stmt_featured->close();
             animation: rotate 15s linear infinite;
             transform-origin: 84px 93px;
         }
-        /* Customizing blob colors to match the navbar */
         .blob-path-1 {
             fill: #e44d26;
         }
@@ -122,8 +191,31 @@ $stmt_featured->close();
         .blob-path-4 {
             fill: #e44d26;
         }
-
-        /* Featured Products Section */
+        /* Section styles */
+        .section-title {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .info-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .info-card h4 {
+            margin-bottom: 0.5rem;
+        }
+        .info-card p {
+            margin: 0;
+            font-size: 1rem;
+            color: #666;
+        }
+        /* Featured Products Section (existing) */
         .featured-products {
             padding-top: 4rem;
             padding-bottom: 4rem;
@@ -131,7 +223,7 @@ $stmt_featured->close();
         .product-card {
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             transition: transform 0.3s ease;
         }
         .product-card:hover {
@@ -180,12 +272,8 @@ $stmt_featured->close();
         <defs>
             <style>
                 @keyframes rotate {
-                    0% {
-                        transform: rotate(0deg);
-                    }
-                    100% {
-                        transform: rotate(360deg);
-                    }
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
                 }
                 .out-top {
                     animation: rotate 20s linear infinite;
@@ -215,13 +303,15 @@ $stmt_featured->close();
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php"><i class="bi bi-shop"></i> QuickByte Canteen</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             Home
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -255,7 +345,72 @@ $stmt_featured->close();
         </div>
     </section>
 
-    <!-- Featured Products -->
+    <!-- New Section: Top Seller of Retailer -->
+    <section class="container mt-5">
+        <div class="info-card">
+            <h4>Top Seller</h4>
+            <?php if ($top_seller): ?>
+                <p><?php echo htmlspecialchars($top_seller['name']); ?> (<?php echo $top_seller['total_orders']; ?> orders)</p>
+            <?php else: ?>
+                <p>No data available.</p>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- New Section: Top Store -->
+    <section class="container mt-5">
+        <div class="info-card">
+            <h4>Top Store</h4>
+            <?php if ($top_store): ?>
+                <p><?php echo htmlspecialchars($top_store['stall_name']); ?> (<?php echo $top_store['total_orders']; ?> orders)</p>
+            <?php else: ?>
+                <p>No data available.</p>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- New Section: Top Product -->
+    <section class="container mt-5">
+        <div class="info-card">
+            <h4>Top Product</h4>
+            <?php if ($top_product): ?>
+                <p><?php echo htmlspecialchars($top_product['name']); ?> (Sold: <?php echo $top_product['total_sold']; ?>)</p>
+                <img src="<?php echo htmlspecialchars($top_product['image_path']); ?>" alt="<?php echo htmlspecialchars($top_product['name']); ?>" style="max-width:200px; margin-top:10px;">
+            <?php else: ?>
+                <p>No data available.</p>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- New Section: Featured Products from Different Stall -->
+    <section class="featured-products">
+        <div class="container">
+            <h2 class="text-center mb-5">Featured Products from Different Stalls</h2>
+            <div class="row">
+                <?php if (!empty($featured_diff_products)): ?>
+                    <?php foreach ($featured_diff_products as $product): ?>
+                        <div class="col-md-4 mb-4">
+                            <div class="card product-card">
+                                <img src="<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                                <div class="card-body">
+                                    <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
+                                    <p class="card-text"><strong>Price:</strong> $<?php echo number_format($product['price'], 2); ?></p>
+                                    <p class="card-text"><strong>Category:</strong> <?php echo htmlspecialchars($product['category']); ?></p>
+                                    <a href="product_details.php?item_id=<?php echo $product['item_id']; ?>" class="btn btn-view">View Product</a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12 text-center">
+                        <p>No featured products available from different stalls.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+
+    <!-- Existing Section: Featured Products -->
     <section class="featured-products">
         <div class="container">
             <h2 class="text-center mb-5">Featured Products</h2>
@@ -281,6 +436,25 @@ $stmt_featured->close();
     <footer>
         <p>&copy; 2025 QuickByte Canteen. All rights reserved.</p>
     </footer>
+
+    <!-- JavaScript for Add to Cart -->
+    <script>
+        function addToCart(itemId) {
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item_id: itemId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Item added to cart!');
+                } else {
+                    alert(data.message || 'Failed to add item to cart.');
+                }
+            });
+        }
+    </script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
