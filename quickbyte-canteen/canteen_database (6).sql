@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 12, 2025 at 03:31 PM
+-- Generation Time: Mar 15, 2025 at 03:08 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -70,19 +70,6 @@ CREATE TABLE `food_storage` (
   `food_name` varchar(255) NOT NULL,
   `quantity` int(11) NOT NULL,
   `expiration_day` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `gcash_accounts`
---
-
-CREATE TABLE `gcash_accounts` (
-  `account_id` int(11) NOT NULL,
-  `account_number` varchar(15) NOT NULL,
-  `account_name` varchar(100) NOT NULL,
-  `balance` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -159,12 +146,12 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_date`, `order_status`) VALUES
-('ORDER_67b729d0000a00.79837591', 1, 0, 9.98, '2025-02-20 13:10:40', 'Pending'),
+('ORDER_67b729d0000a00.79837591', 1, 9, 9.98, '2025-02-20 13:10:40', 'Completed'),
 ('ORDER_67b729da8ec268.39575638', 1, 0, 4.50, '2025-02-20 13:10:50', ''),
 ('ORDER_67b732cdde3a30.48020126', 1, 0, 1.50, '2025-02-20 13:49:01', ''),
 ('ORDER_67b7d49e4e5f71.05682525', 1, 0, 7.49, '2025-02-21 01:19:26', ''),
-('ORDER_67b7d5396f1d13.39117098', 1, 0, 22.41, '2025-02-21 01:22:01', 'Pending'),
-('ORDER_67b7d6337e1f40.69251557', 1, 0, 29.93, '2025-02-21 01:26:11', 'Pending'),
+('ORDER_67b7d5396f1d13.39117098', 1, 9, 22.41, '2025-02-21 01:22:01', 'Completed'),
+('ORDER_67b7d6337e1f40.69251557', 1, 8, 29.93, '2025-02-21 01:26:11', 'Cancelled'),
 ('ORDER_67b7dae517d179.85585574', 2, 0, 7.50, '2025-02-21 01:46:13', 'Pending'),
 ('ORDER_67b7ec30719de5.72521993', 2, 0, 5.99, '2025-02-21 03:00:00', 'Pending'),
 ('ORDER_67c1352adf30c4.98216851', 6, 0, 11.96, '2025-02-28 04:01:46', 'Pending'),
@@ -373,13 +360,6 @@ ALTER TABLE `food_storage`
   ADD KEY `item_id` (`item_id`);
 
 --
--- Indexes for table `gcash_accounts`
---
-ALTER TABLE `gcash_accounts`
-  ADD PRIMARY KEY (`account_id`),
-  ADD UNIQUE KEY `account_number` (`account_number`);
-
---
 -- Indexes for table `inventory`
 --
 ALTER TABLE `inventory`
@@ -466,12 +446,6 @@ ALTER TABLE `feedback`
 --
 ALTER TABLE `food_storage`
   MODIFY `storage_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `gcash_accounts`
---
-ALTER TABLE `gcash_accounts`
-  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `inventory`

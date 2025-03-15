@@ -1,3 +1,60 @@
+<?php 
+ob_start();
+session_start();
+include '../sidepanel.php'; 
+include '../../config.php';
+
+// Check if the user is logged in and has the correct role and stall ID
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['stall_id']) || $_SESSION['role'] != 'Retailer') {
+    header("Location: ../../auth/login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+$stall_id = $_SESSION['stall_id']; 
+
+// Fetch the stall name from the `stalls` table
+$stall_name = "Unknown Stall"; // Default value
+$stall_sql = "SELECT s.stall_name FROM stalls s INNER JOIN retailers r ON s.stall_id = r.stall_id WHERE r.user_id = ?";
+$stall_stmt = $con->prepare($stall_sql);
+$stall_stmt->bind_param("i", $user_id);
+$stall_stmt->execute();
+$stall_result = $stall_stmt->get_result();
+
+if ($stall_result->num_rows > 0) {
+    $stall = $stall_result->fetch_assoc();
+    $stall_name = $stall['stall_name']; 
+}
+$stall_stmt->close();
+
+// Fetch total orders for the stall
+$total_orders_sql = "SELECT COUNT(*) AS total_orders FROM orders WHERE stall_id = ?";
+$total_orders_stmt = $con->prepare($total_orders_sql);
+$total_orders_stmt->bind_param("i", $stall_id);
+$total_orders_stmt->execute();
+$total_orders_result = $total_orders_stmt->get_result();
+$total_orders = $total_orders_result->fetch_assoc()['total_orders'] ?? 0;
+$total_orders_stmt->close();
+
+// Fetch total revenue (only completed orders)
+$total_revenue_sql = "SELECT SUM(total_price    ) AS total_revenue FROM orders WHERE stall_id = ? AND order_status = 'Completed'";
+$total_revenue_stmt = $con->prepare($total_revenue_sql);
+$total_revenue_stmt->bind_param("i", $stall_id);
+$total_revenue_stmt->execute();
+$total_revenue_result = $total_revenue_stmt->get_result();
+$total_revenue = $total_revenue_result->fetch_assoc()['total_revenue'] ?? 0;
+$total_revenue_stmt->close();
+
+// Fetch pending orders
+$pending_orders_sql = "SELECT COUNT(*) AS pending_orders FROM orders WHERE stall_id = ? AND order_status = 'Pending'";
+$pending_orders_stmt = $con->prepare($pending_orders_sql);
+$pending_orders_stmt->bind_param("i", $stall_id);
+$pending_orders_stmt->execute();
+$pending_orders_result = $pending_orders_stmt->get_result();
+$pending_orders = $pending_orders_result->fetch_assoc()['pending_orders'] ?? 0;
+$pending_orders_stmt->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,15 +69,15 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            background-color: #343a40; /* Dark background */
+            background-color: #343a40;
             color: white;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 60px; /* Fixed header height */
-            z-index: 1000; /* Ensure header is above other content */
+            height: 60px;
+            z-index: 1000;
         }
         .header-left {
             display: flex;
@@ -40,7 +97,7 @@
 
         /* Main Content Styles */
         .main-content {
-            margin-top: 80px; /* Add margin to avoid overlap with the header */
+            margin-top: 80px;
             padding: 20px;
         }
 
@@ -114,43 +171,15 @@
     </style>
 </head>
 
-<?php 
-ob_start();
-session_start();
-include '../sidepanel.php'; 
-include '../../config.php';
-
-// Check if the user is logged in and has the correct role and stall ID
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['stall_id']) || $_SESSION['role'] != 'Retailer' || $_SESSION['stall_id'] != 9) {
-    header("Location: ../../auth/login.php");
-    exit();
-}
-
-// Fetch the stall name from the `stalls` table
-$stall_name = "Unknown Stall"; // Default value
-$user_id = $_SESSION['user_id']; // Get the logged-in user's ID
-$stall_sql = "SELECT s.stall_name FROM stalls s inner join retailers r on s.stall_id = r.stall_id where r.user_id = ?";
-$stall_stmt = $con->prepare($stall_sql);
-$stall_stmt->bind_param("i", $user_id);
-$stall_stmt->execute();
-$stall_result = $stall_stmt->get_result();
-
-if ($stall_result->num_rows > 0) {
-    $stall = $stall_result->fetch_assoc();
-    $stall_name = $stall['stall_name']; // Get the stall name
-}
-$stall_stmt->close();
-?>
-
 <body>
 
     <!-- Header -->
     <div class="header">
         <div class="header-left">
-            <span class="stall-name"><?php echo htmlspecialchars($stall_name); ?></span> <!-- Name of the Stall -->
+            <span class="stall-name"><?php echo htmlspecialchars($stall_name); ?></span>
         </div>
         <div class="header-right">
-            <span class="username"><?php echo htmlspecialchars($_SESSION['name']); ?></span> <!-- Logged-in User's Name -->
+            <span class="username"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
         </div>
     </div>
 
@@ -159,15 +188,15 @@ $stall_stmt->close();
         <!-- Dashboard Metrics -->
         <div class="dashboard-metrics">
             <div class="metric-card">
-                <h3>150</h3>
+                <h3><?php echo $total_orders; ?></h3>
                 <p>Total Orders</p>
             </div>
             <div class="metric-card">
-                <h3>$1,200</h3>
+                <h3>PHP <?php echo number_format($total_revenue, 2); ?></h3>
                 <p>Total Revenue</p>
             </div>
             <div class="metric-card">
-                <h3>25</h3>
+                <h3><?php echo $pending_orders; ?></h3>
                 <p>Pending Orders</p>
             </div>
         </div>
@@ -192,9 +221,10 @@ $stall_stmt->close();
         <!-- Debug Session Data -->
         <div class="session-data">
             <h3>Session Data</h3>
-            <p>Stall ID: <?php echo htmlspecialchars($_SESSION['stall_id']); ?></p>
-            <p>User ID: <?php echo htmlspecialchars($_SESSION['user_id']); ?></p>
+            <p>Stall ID: <?php echo htmlspecialchars($stall_id); ?></p>
+            <p>User ID: <?php echo htmlspecialchars($user_id); ?></p>
         </div>
     </div>
+
 </body>
 </html>

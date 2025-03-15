@@ -61,6 +61,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
+<script>
+        function checkRole() {
+            let roleField = document.getElementById("role");
+            let stallField = document.getElementById("stall-select");
+
+            if (roleField.value === "Retailer") {
+                if (!stallField) {
+                    // Create stall select field if it doesn't exist
+                    stallField = document.createElement("div");
+                    stallField.id = "stall-select";
+                    stallField.innerHTML = `
+                        <div class="form-group">
+                            <i class="fas fa-store"></i>
+                            <select class="form-select" id="stall_id" name="stall_id" required>
+                                <option value="">Select Stall</option>
+                                <?php
+                                $stallSql = "SELECT stall_id, name FROM stalls";
+                                $stallStmt = $con->prepare($stallSql);
+                                $stallStmt->execute();
+                                $stallResult = $stallStmt->get_result();
+
+                                while ($stallRow = $stallResult->fetch_assoc()) {
+                                    echo "<option value='" . $stallRow['stall_id'] . "'>" . $stallRow['name'] . "</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    `;
+                    roleField.parentNode.parentNode.appendChild(stallField);
+                }
+            } else {
+                if (stallField) {
+                    stallField.remove(); // Remove stall select if role changes
+                }
+            }
+        }
+    </script>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -70,6 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
     <style>
         
         body {
@@ -79,12 +117,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     background-size: cover;
     background-position: center;
     min-height: 100vh;
-    display: flex;
+    display: block;
     align-items: center;
     justify-content: center;
     margin: 0;
     padding: 15px;
-    overflow: hidden;
+    
 }
 
 .register-container {
@@ -94,10 +132,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     width: 100%;
     max-width: 400px;
-    max-height: 90vh;
-    overflow-y: auto; 
+    max-height: 90vh; 
     position: relative;
-    display: flex;
+    display: block;
     flex-direction: column;
 }
 
@@ -187,43 +224,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
     </style>
 
-    <script>
-        function checkRole() {
-            let roleField = document.getElementById("role");
-            let stallField = document.getElementById("stall-select");
-
-            if (roleField.value === "Retailer") {
-                if (!stallField) {
-                    // Create stall select field if it doesn't exist
-                    stallField = document.createElement("div");
-                    stallField.id = "stall-select";
-                    stallField.innerHTML = `
-                        <div class="form-group">
-                            <i class="fas fa-store"></i>
-                            <select class="form-select" id="stall_id" name="stall_id" required>
-                                <option value="">Select Stall</option>
-                                <?php
-                                $stallSql = "SELECT stall_id, name FROM stalls";
-                                $stallStmt = $con->prepare($stallSql);
-                                $stallStmt->execute();
-                                $stallResult = $stallStmt->get_result();
-
-                                while ($stallRow = $stallResult->fetch_assoc()) {
-                                    echo "<option value='" . $stallRow['stall_id'] . "'>" . $stallRow['name'] . "</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                    `;
-                    roleField.parentNode.parentNode.appendChild(stallField);
-                }
-            } else {
-                if (stallField) {
-                    stallField.remove(); // Remove stall select if role changes
-                }
-            }
-        }
-    </script>
+    
 </head>
 <body>
 
@@ -282,6 +283,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
