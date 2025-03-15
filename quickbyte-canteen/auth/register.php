@@ -68,62 +68,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Register - QuickByte Canteen</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap and Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        
         body {
-    background-color: #f8f9fa;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-                     url('../assets/img/canteen-background.jpg');
-    background-size: cover;
-    background-position: center;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    padding: 15px;
-    overflow: hidden;
-}
-
-.register-container {
-    background-color: rgba(255, 255, 255, 0.92);
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    width: 100%;
-    max-width: 400px;
-    max-height: 90vh;
-    overflow-y: auto; 
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-.register-container::-webkit-scrollbar {
-    width: 8px; /* Thin scrollbar */
-}
-
-.register-container::-webkit-scrollbar-track {
-    background: #f1f1f1; /* Light gray track */
-    border-radius: 10px;
-}
-
-.register-container::-webkit-scrollbar-thumb {
-    background: #e44d26; /* Bootstrap primary color */
-    border-radius: 10px;
-}
-
-.register-container::-webkit-scrollbar-thumb:hover {
-    background:rgb(44, 37, 35); /* Slightly darker on hover */
-}
-
+            background-color: #f8f9fa;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                             url('../assets/img/canteen-background.jpg');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 15px;
+            overflow: hidden;
+        }
+        .register-container {
+            background-color: rgba(255, 255, 255, 0.92);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .register-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .register-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .register-container::-webkit-scrollbar-thumb {
+            background: #e44d26;
+            border-radius: 10px;
+        }
+        .register-container::-webkit-scrollbar-thumb:hover {
+            background: rgb(44, 37, 35);
+        }
         .logo-container {
             text-align: center;
             margin-bottom: 2rem;
         }
-
         .logo-circle {
             background-color: #e44d26;
             width: 80px;
@@ -135,17 +128,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 0 auto;
             margin-bottom: 1rem;
         }
-
         .logo-circle i {
             font-size: 2rem;
             color: white;
         }
-
         .form-group {
             margin-bottom: 1.5rem;
             position: relative;
         }
-
         .form-group i {
             position: absolute;
             left: 1rem;
@@ -153,13 +143,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transform: translateY(-50%);
             color: #e44d26;
         }
-
         .form-control, .form-select {
             padding-left: 2.5rem;
             border-radius: 8px;
             border: 1px solid #ddd;
         }
-
         .btn-primary {
             background-color: #e44d26;
             border: none;
@@ -168,25 +156,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 600;
             transition: all 0.3s ease;
         }
-
         .btn-primary:hover {
             background-color: #d13d17;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(228, 77, 38, 0.2);
         }
-
         .form-content {
             flex-grow: 1;
-            max-height: 50vh; /* Limits the scrollable height */
-             overflow-y: auto; /* Enables vertical scrolling */
-            padding-right: 10px; /* Prevents content from overlapping scrollbar */
+            max-height: 50vh;
+            overflow-y: auto;
+            padding-right: 10px;
             scrollbar-width: thin;
             scrollbar-color: #e44d26 #f1f1f1;
         }
-
-        
     </style>
-
     <script>
         function checkRole() {
             let roleField = document.getElementById("role");
@@ -194,7 +177,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if (roleField.value === "Retailer") {
                 if (!stallField) {
-                    // Create stall select field if it doesn't exist
                     stallField = document.createElement("div");
                     stallField.id = "stall-select";
                     stallField.innerHTML = `
@@ -203,13 +185,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <select class="form-select" id="stall_id" name="stall_id" required>
                                 <option value="">Select Stall</option>
                                 <?php
-                                $stallSql = "SELECT stall_id, name FROM stalls";
+                                $stallSql = "SELECT stall_id, stall_name FROM stalls";
                                 $stallStmt = $con->prepare($stallSql);
                                 $stallStmt->execute();
                                 $stallResult = $stallStmt->get_result();
-
                                 while ($stallRow = $stallResult->fetch_assoc()) {
-                                    echo "<option value='" . $stallRow['stall_id'] . "'>" . $stallRow['name'] . "</option>";
+                                    echo "<option value='" . $stallRow['stall_id'] . "'>" . $stallRow['stall_name'] . "</option>";
                                 }
                                 ?>
                             </select>
@@ -219,14 +200,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             } else {
                 if (stallField) {
-                    stallField.remove(); // Remove stall select if role changes
+                    stallField.remove();
                 }
             }
         }
     </script>
 </head>
 <body>
-
 <div class="register-container">
     <div class="logo-container">
         <div class="logo-circle">
@@ -234,32 +214,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
         <h2 class="text-center mb-4">Create Account</h2>
     </div>
-
     <form id="register-form" method="POST" class="form-content">
         <?php if (!empty($error)): ?>
             <div class="alert alert-danger" role="alert">
                 <?php echo $error; ?>
             </div>
         <?php endif; ?>
-
         <div class="form-group">
             <i class="fas fa-user"></i>
-            <input type="text" class="form-control" id="full_name" name="full_name"
-                   placeholder="Full Name" required>
+            <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Full Name" required>
         </div>
-
         <div class="form-group">
             <i class="fas fa-envelope"></i>
-            <input type="email" class="form-control" id="email" name="email"
-                   placeholder="Email Address" required>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Email Address" required>
         </div>
-
         <div class="form-group">
             <i class="fas fa-lock"></i>
-            <input type="password" class="form-control" id="password" name="password"
-                   placeholder="Password" required>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
         </div>
-
         <div class="form-group">
             <i class="fas fa-user-tag"></i>
             <select class="form-select" id="role" name="role" required onchange="checkRole()">
@@ -268,12 +240,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <option value="Retailer">Retailer</option>
             </select>
         </div>
-
     </form>
-
     <div class="mt-auto">
         <button type="submit" form="register-form" class="btn btn-primary btn-block">Register</button>
-
         <div class="text-center mt-4">
             <p class="mb-0">Already have an account?
                 <a href="login.php" class="text-primary">Login here</a>
@@ -281,7 +250,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
