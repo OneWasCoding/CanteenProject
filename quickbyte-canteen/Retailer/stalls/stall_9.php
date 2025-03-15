@@ -37,7 +37,7 @@ $total_orders = $total_orders_result->fetch_assoc()['total_orders'] ?? 0;
 $total_orders_stmt->close();
 
 // Fetch total revenue (only completed orders)
-$total_revenue_sql = "SELECT SUM(total_price    ) AS total_revenue FROM orders WHERE stall_id = ? AND order_status = 'Completed'";
+$total_revenue_sql = "SELECT SUM(total_price) AS total_revenue FROM orders WHERE stall_id = ? AND order_status = 'Completed'";
 $total_revenue_stmt = $con->prepare($total_revenue_sql);
 $total_revenue_stmt->bind_param("i", $stall_id);
 $total_revenue_stmt->execute();
@@ -53,6 +53,55 @@ $pending_orders_stmt->execute();
 $pending_orders_result = $pending_orders_stmt->get_result();
 $pending_orders = $pending_orders_result->fetch_assoc()['pending_orders'] ?? 0;
 $pending_orders_stmt->close();
+
+// Fetch recent activity
+$recent_activity_sql = "
+    (SELECT 'order' AS type, order_id AS id, order_status AS status, order_date AS timestamp 
+     FROM orders 
+     WHERE stall_id = ?)
+    UNION
+    (SELECT 'inventory' AS type, inventory_id AS id, 'Item Added' AS status, created_at AS timestamp 
+     FROM inventory 
+     WHERE stall_id = ?)
+    ORDER BY timestamp DESC
+    LIMIT 5"; // Fetch the 5 most recent activities
+$recent_activity_stmt = $con->prepare($recent_activity_sql);
+$recent_activity_stmt->bind_param("ii", $stall_id, $stall_id);
+$recent_activity_stmt->execute();
+$recent_activity_result = $recent_activity_stmt->get_result();
+$recent_activities = [];
+while ($row = $recent_activity_result->fetch_assoc()) {
+    $recent_activities[] = $row;
+}
+$recent_activity_stmt->close();
+
+// Fetch top 5 best-selling food items for the specific stall
+$top_food_sql = "
+    SELECT mi.name, COUNT(od.item_id) AS total_orders
+    FROM order_details od
+    INNER JOIN menu_items mi ON od.item_id = mi.item_id
+    INNER JOIN orders o ON od.order_id = o.order_id
+    WHERE o.stall_id = ? and mi.stall_id = ?
+    GROUP BY od.item_id
+    ORDER BY total_orders DESC
+    LIMIT 5";
+$top_food_stmt = $con->prepare($top_food_sql);
+
+// Bind the session stall_id to the query
+$top_food_stmt->bind_param("ii", $_SESSION['stall_id'], $_SESSION['stall_id']);
+
+// Execute the query
+$top_food_stmt->execute();
+
+// Fetch the results
+$top_food_result = $top_food_stmt->get_result();
+$top_food_items = [];
+while ($row = $top_food_result->fetch_assoc()) {
+    $top_food_items[] = $row;
+}
+
+// Close the statement
+$top_food_stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -211,20 +260,46 @@ $pending_orders_stmt->close();
         <div class="recent-activity">
             <h2>Recent Activity</h2>
             <ul>
-                <li>Order #1234 placed by John Doe</li>
-                <li>Order #1235 placed by Jane Smith</li>
-                <li>New menu item added: Burger</li>
-                <li>Settings updated: Payment methods</li>
+                <?php if (!empty($recent_activities)): ?>
+                    <?php foreach ($recent_activities as $activity): ?>
+                        <li>
+                            <?php
+                            $type = $activity['type'];
+                            $id = $activity['id'];
+                            $status = $activity['status'];
+                            $timestamp = date("M j, Y h:i A", strtotime($activity['timestamp']));
+
+                            if ($type === 'order') {
+                                echo "Order #$id: $status (at $timestamp)";
+                            } elseif ($type === 'inventory') {
+                                echo "Inventory Item #$id: $status (at $timestamp)";
+                            }
+                            ?>
+                        </li>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <li>No recent activity.</li>
+                <?php endif; ?>
             </ul>
         </div>
 
-        <!-- Debug Session Data -->
+        <!-- Top 5 Best-Selling Food Items -->
         <div class="session-data">
-            <h3>Session Data</h3>
-            <p>Stall ID: <?php echo htmlspecialchars($stall_id); ?></p>
-            <p>User ID: <?php echo htmlspecialchars($user_id); ?></p>
+            <h3>Top 5 Best-Selling Food Items <?php echo $stall_id ?></h3>
+            <?php if (!empty($top_food_items)): ?>
+                <ul>
+                    <?php foreach ($top_food_items as $item): ?>
+                        <li>
+                            <?php echo htmlspecialchars($item['name']); ?> - 
+                            <strong><?php echo $item['total_orders']; ?></strong> orders
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p>No data available.</p>
+            <?php endif; ?>
         </div>
     </div>
 
 </body>
-</html>
+</html> 
