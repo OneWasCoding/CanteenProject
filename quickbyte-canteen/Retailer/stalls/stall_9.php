@@ -112,125 +112,137 @@ $top_food_stmt->close();
     <title>Stall Management</title>
     <link href="../../css/styles.css" rel="stylesheet" />
     <style>
-        /* Header Styles */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: #343a40;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            z-index: 1000;
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e44d26;
+            --background-color: #f8f9fa;
         }
-        .header-left {
-            display: flex;
-            align-items: center;
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stall-name {
             font-size: 1.2em;
             font-weight: bold;
         }
-        .header-right {
-            display: flex;
-            align-items: center;
-        }
+
         .username {
             font-size: 1.1em;
         }
 
-        /* Main Content Styles */
         .main-content {
             margin-top: 80px;
             padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        /* Dashboard Metrics */
         .dashboard-metrics {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .dashboard-metrics .metric-card {
-            flex: 1;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        .dashboard-metrics .metric-card h3 {
-            margin: 0;
-            font-size: 1.5em;
-        }
-        .dashboard-metrics .metric-card p {
-            margin: 5px 0 0;
-            color: #666;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
         }
 
-        /* Quick Actions */
-        .quick-actions {
-            margin-bottom: 20px;
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
         }
-        .quick-actions .action-btn {
-            background-color: #007bff;
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card h3 {
+            color: var(--secondary-color);
+            margin: 0 0 0.5rem 0;
+            font-size: 1.8rem;
+        }
+
+        .metric-card p {
+            color: #666;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .quick-actions {
+            margin-bottom: 2rem;
+        }
+
+        .action-btn {
+            background-color: var(--secondary-color);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 0.8rem 1.5rem;
             border-radius: 5px;
             cursor: pointer;
             margin-right: 10px;
+            transition: background-color 0.3s ease;
         }
 
-        /* Recent Activity */
-        .recent-activity {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        .action-btn:hover {
+            background-color: #d13d17;
         }
+
+        .recent-activity {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
         .recent-activity h2 {
             margin-top: 0;
         }
+
         .recent-activity ul {
             list-style: none;
             padding: 0;
         }
+
         .recent-activity ul li {
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
         }
+
         .recent-activity ul li:last-child {
             border-bottom: none;
         }
 
-        /* Debug Session Data */
         .session-data {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
+            background: white;
+            padding: 2rem;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .session-data h3 {
+            margin-top: 0;
+        }
+
+        .session-data ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .session-data ul li {
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .session-data ul li:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
 
 <body>
-
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <span class="stall-name"><?php echo htmlspecialchars($stall_name); ?></span>
-        </div>
-        <div class="header-right">
-            <span class="username"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
-        </div>
-    </div>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -239,10 +251,12 @@ $top_food_stmt->close();
             <div class="metric-card">
                 <h3><?php echo $total_orders; ?></h3>
                 <p>Total Orders</p>
+                <small class="text-muted">All-time orders processed</small>
             </div>
             <div class="metric-card">
                 <h3>PHP <?php echo number_format($total_revenue, 2); ?></h3>
                 <p>Total Revenue</p>
+                <small class="text-muted">Completed orders only</small>
             </div>
             <div class="metric-card">
                 <h3><?php echo $pending_orders; ?></h3>
@@ -285,7 +299,7 @@ $top_food_stmt->close();
 
         <!-- Top 5 Best-Selling Food Items -->
         <div class="session-data">
-            <h3>Top 5 Best-Selling Food Items <?php echo $stall_id ?></h3>
+            <h3>Top 5 Best-Selling Food Items</h3>
             <?php if (!empty($top_food_items)): ?>
                 <ul>
                     <?php foreach ($top_food_items as $item): ?>
@@ -302,4 +316,5 @@ $top_food_stmt->close();
     </div>
 
 </body>
-</html> 
+</html>
+

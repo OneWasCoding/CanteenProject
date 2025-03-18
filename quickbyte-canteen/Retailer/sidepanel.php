@@ -1,3 +1,30 @@
+<?php
+include '../../config.php'; // Include the database connection
+
+// Check if the user is logged in and has the correct role and stall ID
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['stall_id']) || $_SESSION['role'] != 'Retailer') {
+    header("Location: ../../auth/login.php");
+    exit();
+}
+
+// Fetch the stall name from the `stalls` table
+$stall_name = "Stall Manager"; // Default value
+$stall_sql = "SELECT stall_name FROM stalls WHERE stall_id = ?";
+$stall_stmt = $con->prepare($stall_sql);
+$stall_stmt->bind_param("i", $_SESSION['stall_id']);
+$stall_stmt->execute();
+$stall_result = $stall_stmt->get_result();
+
+if ($stall_result->num_rows > 0) {
+    $stall = $stall_result->fetch_assoc();
+    $stall_name = $stall['stall_name']; // Get the stall name
+}
+$stall_stmt->close();
+
+// Generate the stall landing page URL
+$stall_landing_page = "../stalls/stall_{$_SESSION['stall_id']}.php";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -116,6 +143,16 @@
             margin-left: 250px;
             /* Adjust based on the expanded width of the side panel */
         }
+
+        /* Make the stall name clickable */
+        .stall-name-link {
+            text-decoration: none; /* Remove underline */
+            color: inherit; /* Inherit the color from parent */
+        }
+
+        .stall-name-link:hover {
+            color: #007bff; /* Change color on hover */
+        }
     </style>
 </head>
 
@@ -126,7 +163,9 @@
         <!-- Header Section -->
         <div class="header">
             <i class="fas fa-store"></i> <!-- Icon for the stall -->
-            <span>Stall Manager</span> <!-- Brand name -->
+            <a href="<?php echo $stall_landing_page; ?>" class="stall-name-link">
+                <span><?php echo htmlspecialchars($stall_name); ?></span> <!-- Dynamic stall name -->
+            </a>
         </div>
 
         <!-- Management Options -->
@@ -136,19 +175,19 @@
                 <span>Manage Menu</span>
             </a>
 
+            <a href="../navigation/reports.php" class="option">
+                <i class="fa-duotone fa-solid fa-chart-column"></i>
+                <span>Reports</span>
+            </a>
+
             <a href="#" class="option">
                 <i class="fas fa-list-alt"></i> <!-- Icon for View Orders -->
                 <span>View Orders</span>
             </a>
 
             <a href="#" class="option">
-                <i class="fa-solid fa-warehouse"></i> <!-- Icon for View Orders -->
+                <i class="fa-solid fa-warehouse"></i> <!-- Icon for Inventory -->
                 <span>Inventory</span>
-            </a>
-
-            <a href="#" class="option">
-                <i class="fa-duotone fa-solid fa-chart-column"></i>
-                <span>Reports</span>
             </a>
 
             <a href="#" class="option">
@@ -165,7 +204,6 @@
                 <i class="fa-duotone fa-solid fa-right-from-bracket"></i>
                 <span>Logout</span>
             </a>
-
         </div>
     </div>
 
