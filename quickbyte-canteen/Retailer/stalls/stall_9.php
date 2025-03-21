@@ -13,9 +13,10 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSIO
 $user_id = $_SESSION['user_id'];
 $stall_id = $_SESSION['stall_id']; 
 
-// Fetch the stall name from the `stalls` table
+// Fetch the stall name and status from the `stalls` table
 $stall_name = "Unknown Stall"; // Default value
-$stall_sql = "SELECT s.stall_name FROM stalls s INNER JOIN retailers r ON s.stall_id = r.stall_id WHERE r.user_id = ?";
+$stall_status = "Closed"; // Default value
+$stall_sql = "SELECT s.stall_name, s.status FROM stalls s INNER JOIN retailers r ON s.stall_id = r.stall_id WHERE r.user_id = ?";
 $stall_stmt = $con->prepare($stall_sql);
 $stall_stmt->bind_param("i", $user_id);
 $stall_stmt->execute();
@@ -24,8 +25,25 @@ $stall_result = $stall_stmt->get_result();
 if ($stall_result->num_rows > 0) {
     $stall = $stall_result->fetch_assoc();
     $stall_name = $stall['stall_name']; 
+    $stall_status = $stall['status']; // Fetch the current stall status
 }
 $stall_stmt->close();
+
+// Handle Toggle Stall Status
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['toggle_stall_status'])) {
+    $new_status = ($stall_status == 'Open') ? 'Closed' : 'Open';
+
+    // Update the stall status in the database
+    $update_sql = "UPDATE stalls SET status = ? WHERE stall_id = ?";
+    $update_stmt = $con->prepare($update_sql);
+    $update_stmt->bind_param("si", $new_status, $stall_id);
+    $update_stmt->execute();
+    $update_stmt->close();
+
+    // Refresh the page to reflect the updated status
+    header("Location: ../stalls/stall_{$stall_id}.php");
+    exit();
+}
 
 // Fetch total orders for the stall
 $total_orders_sql = "SELECT COUNT(*) AS total_orders FROM orders WHERE stall_id = ?";
@@ -111,6 +129,7 @@ $top_food_stmt->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stall Management</title>
     <link href="../../css/styles.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -268,6 +287,12 @@ $top_food_stmt->close();
         <div class="quick-actions">
             <a href="../navigation/manage_menu.php"><button class="action-btn">Add New Item</button></a>
             <a href="../navigation/reports.php"><button class="action-btn">View Reports</button></a>
+            <!-- Stall Status Toggle Button -->
+            <form method="POST" action="" style="display: inline;">
+                <button type="submit" name="toggle_stall_status" class="btn <?php echo ($stall_status == 'Open') ? 'btn-danger' : 'btn-success'; ?>">
+                    <?php echo ($stall_status == 'Open') ? 'Close Stall' : 'Open Stall'; ?>
+                </button>
+            </form>
         </div>
 
         <!-- Recent Activity -->
@@ -317,4 +342,3 @@ $top_food_stmt->close();
 
 </body>
 </html>
-

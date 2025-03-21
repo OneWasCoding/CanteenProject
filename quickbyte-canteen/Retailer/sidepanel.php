@@ -24,7 +24,6 @@ $stall_stmt->close();
 // Generate the stall landing page URL
 $stall_landing_page = "../stalls/stall_{$_SESSION['stall_id']}.php";
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -180,7 +179,7 @@ $stall_landing_page = "../stalls/stall_{$_SESSION['stall_id']}.php";
                 <span>Reports</span>
             </a>
 
-            <a href="#" class="option">
+            <a href="../navigation/vorder.php" class="option">
                 <i class="fas fa-list-alt"></i> <!-- Icon for View Orders -->
                 <span>View Orders</span>
             </a>
@@ -190,12 +189,12 @@ $stall_landing_page = "../stalls/stall_{$_SESSION['stall_id']}.php";
                 <span>Inventory</span>
             </a>
 
-            <a href="#" class="option">
+            <a href="../navigation/feedback.php" class="option">
                 <i class="fa-solid fa-message"></i>
                 <span>Feedback</span>
             </a>
 
-            <a href="#" class="option">
+            <a href="../navigation/settings.php" class="option">
                 <i class="fas fa-cog"></i> <!-- Icon for Update Settings -->
                 <span>Update Settings</span>
             </a>

@@ -124,7 +124,7 @@
         $price = $_POST['price'];
         $availability = $_POST['availability'];
         $quantity = $_POST['quantity'];
-        $expiration = $_POST['expiration'];
+        $expiration = $_POST['expiration_'];
         $current_image = $_POST['current_image']; // Current image path from the hidden input
     
         // Initialize image_path with the current image
