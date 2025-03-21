@@ -36,8 +36,9 @@ if (!$product) {
 }
 
 // Fetch reviews for the stall offering this product.
-// NOTE: This query assumes that your feedback table includes an item_id column linking the review to the product.
-// If not, reviews are tied to the stall.
+// Note: Since your feedback table does not include a product (item) column,
+// we fetch reviews based on the stall_id. This means that reviews are linked
+// to the stall, not directly to the product.
 $sql_reviews = "
     SELECT f.feedback_id, f.rating, f.comment, f.created_at, f.user_id, u.name AS reviewer_name 
     FROM feedback f 
@@ -71,7 +72,7 @@ $averageRating = $countReviews > 0 ? round($totalRating / $countReviews, 1) : 0;
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.min.css">
     <!-- Font Awesome for star icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -80,7 +81,7 @@ $averageRating = $countReviews > 0 ? round($totalRating / $countReviews, 1) : 0;
             min-height: 100vh;
             font-family: 'Poppins', sans-serif;
         }
-        /* Nav bar (same as reviews.php) */
+        /* Navbar (same as reviews.php) */
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
