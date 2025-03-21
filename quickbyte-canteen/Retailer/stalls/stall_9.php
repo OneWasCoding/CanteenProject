@@ -266,8 +266,8 @@ $top_food_stmt->close();
 
         <!-- Quick Actions -->
         <div class="quick-actions">
-            <button class="action-btn">Add New Item</button>
-            <button class="action-btn">View Reports</button>
+            <a href="../navigation/manage_menu.php"><button class="action-btn">Add New Item</button></a>
+            <a href="../navigation/reports.php"><button class="action-btn">View Reports</button></a>
         </div>
 
         <!-- Recent Activity -->

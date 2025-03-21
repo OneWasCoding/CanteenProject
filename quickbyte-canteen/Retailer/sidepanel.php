@@ -170,7 +170,7 @@ $stall_landing_page = "../stalls/stall_{$_SESSION['stall_id']}.php";
 
         <!-- Management Options -->
         <div class="management-options">
-            <a href="#" class="option">
+            <a href="../navigation/manage_menu.php" class="option">
                 <i class="fas fa-utensils"></i> <!-- Icon for Manage Menu -->
                 <span>Manage Menu</span>
             </a>
