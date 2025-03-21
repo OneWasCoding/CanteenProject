@@ -12,7 +12,7 @@ $user_id = $_SESSION['user_id'];
 
 // 1) Fetch all reviews made by the user
 $sql_reviews = "
-    SELECT f.feedback_id, f.rating, f.comment, f.created_at, s.stall_name 
+    SELECT f.feedback_id, f.rating, f.comment, f.created_at, s.stall_name, f.user_id
     FROM feedback f
     JOIN stalls s ON f.stall_id = s.stall_id
     WHERE f.user_id = ?
@@ -25,32 +25,25 @@ $result_reviews = $stmt_reviews->get_result();
 $user_reviews = $result_reviews->fetch_all(MYSQLI_ASSOC);
 $stmt_reviews->close();
 
-$hasReviews = !empty($user_reviews);
+$countReviews = count($user_reviews);
 
-// 2) If the user has no reviews, fetch completed orders that haven’t been reviewed
-$notReviewedOrders = [];
-if (!$hasReviews) {
-    // We assume an order is "not reviewed" if it's completed and
-    // there's no feedback record for that stall_id + user_id pair.
-    $sql_notReviewed = "
-        SELECT o.order_id, o.order_date, o.stall_id, s.stall_name, o.total_price
-        FROM orders o
-        JOIN stalls s ON o.stall_id = s.stall_id
-        LEFT JOIN feedback f 
-               ON f.user_id = o.user_id
-              AND f.stall_id = o.stall_id
-        WHERE o.user_id = ?
-          AND o.order_status = 'Completed'
-          AND f.feedback_id IS NULL
-        ORDER BY o.order_date DESC
-    ";
-    $stmt_notReviewed = $con->prepare($sql_notReviewed);
-    $stmt_notReviewed->bind_param("i", $user_id);
-    $stmt_notReviewed->execute();
-    $result_notReviewed = $stmt_notReviewed->get_result();
-    $notReviewedOrders = $result_notReviewed->fetch_all(MYSQLI_ASSOC);
-    $stmt_notReviewed->close();
-}
+// 2) Always fetch completed orders that haven’t been reviewed (based on stall review)
+$sql_notReviewed = "
+    SELECT o.order_id, o.order_date, o.stall_id, s.stall_name, o.total_price
+    FROM orders o
+    JOIN stalls s ON o.stall_id = s.stall_id
+    LEFT JOIN feedback f ON f.user_id = o.user_id AND f.stall_id = o.stall_id
+    WHERE o.user_id = ?
+      AND o.order_status = 'Completed'
+      AND f.feedback_id IS NULL
+    ORDER BY o.order_date DESC
+";
+$stmt_notReviewed = $con->prepare($sql_notReviewed);
+$stmt_notReviewed->bind_param("i", $user_id);
+$stmt_notReviewed->execute();
+$result_notReviewed = $stmt_notReviewed->get_result();
+$notReviewedOrders = $result_notReviewed->fetch_all(MYSQLI_ASSOC);
+$stmt_notReviewed->close();
 ?>
 
 <!DOCTYPE html>
@@ -61,7 +54,7 @@ if (!$hasReviews) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap CSS & Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.min.css">
     <!-- Font Awesome for star icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -81,11 +74,11 @@ if (!$hasReviews) {
         }
         .reviews-container {
             max-width: 900px;
-            margin: 3rem auto;
+            margin: 5rem auto 2rem;
+            padding: 2rem;
+            background-color: #fff;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            background-color: #fff;
-            padding: 2rem;
         }
         .reviews-header {
             text-align: center;
@@ -192,7 +185,7 @@ if (!$hasReviews) {
                         <div class="text-muted" style="font-size: 0.8rem;">
                             <?php echo htmlspecialchars($review['created_at']); ?>
                         </div>
-                        <!-- Added button group for Edit and Delete -->
+                        <!-- Button group for Edit and Delete -->
                         <div class="btn-group mt-2">
                             <a href="edit_review.php?feedback_id=<?php echo urlencode($review['feedback_id']); ?>" class="btn btn-primary btn-sm">
                                 <i class="bi bi-pencil"></i> Edit
@@ -207,29 +200,29 @@ if (!$hasReviews) {
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <!-- If user has no reviews, show completed orders not reviewed yet -->
                 <p class="text-center">You haven't reviewed any products yet.</p>
-                
-                <?php if (!empty($notReviewedOrders)): ?>
-                    <div class="orders-list">
-                        <h4>Completed Orders Not Yet Reviewed</h4>
-                        <ul class="list-group">
-                            <?php foreach ($notReviewedOrders as $order): ?>
-                                <li class="list-group-item">
-                                    <strong>Order ID:</strong> <?php echo htmlspecialchars($order['order_id']); ?><br>
-                                    <strong>Stall:</strong> <?php echo htmlspecialchars($order['stall_name']); ?><br>
-                                    <strong>Order Date:</strong> <?php echo htmlspecialchars($order['order_date']); ?><br>
-                                    <strong>Total Price:</strong> ₱<?php echo number_format($order['total_price'], 2); ?><br>
-                                    <a href="add_review.php?stall_id=<?php echo urlencode($order['stall_id']); ?>&order_id=<?php echo urlencode($order['order_id']); ?>" class="btn btn-primary btn-sm mt-2">
-                                        <i class="bi bi-pencil-square"></i> Review Now
-                                    </a>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php else: ?>
-                    <p class="text-center">No completed orders to review yet.</p>
-                <?php endif; ?>
+            <?php endif; ?>
+
+            <!-- Always display the list of completed orders not yet reviewed -->
+            <?php if (!empty($notReviewedOrders)): ?>
+                <div class="orders-list">
+                    <h4 class="text-center">Completed Orders Not Yet Reviewed</h4>
+                    <ul class="list-group">
+                        <?php foreach ($notReviewedOrders as $order): ?>
+                            <li class="list-group-item">
+                                <strong>Order ID:</strong> <?php echo htmlspecialchars($order['order_id']); ?><br>
+                                <strong>Stall:</strong> <?php echo htmlspecialchars($order['stall_name']); ?><br>
+                                <strong>Order Date:</strong> <?php echo htmlspecialchars($order['order_date']); ?><br>
+                                <strong>Total Price:</strong> ₱<?php echo number_format($order['total_price'], 2); ?><br>
+                                <a href="add_review.php?stall_id=<?php echo urlencode($order['stall_id']); ?>&order_id=<?php echo urlencode($order['order_id']); ?>" class="btn btn-primary btn-sm mt-2">
+                                    <i class="bi bi-pencil-square"></i> Review Now
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php else: ?>
+                <p class="text-center">No completed orders available for review.</p>
             <?php endif; ?>
         </div>
     </div>
