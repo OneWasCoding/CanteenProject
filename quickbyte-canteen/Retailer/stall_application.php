@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $stmt->close();
-    $conn->close();
+    $con->close();
     header("Location: ../auth/login.php"); // Redirect back to the form
     exit();
 }
