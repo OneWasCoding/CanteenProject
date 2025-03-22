@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 21, 2025 at 10:33 AM
+-- Generation Time: Mar 22, 2025 at 02:37 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `canteen_database`
 --
-CREATE DATABASE IF NOT EXISTS `canteen_database` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `canteen_database`;
 
 -- --------------------------------------------------------
 
@@ -29,7 +27,6 @@ USE `canteen_database`;
 -- Table structure for table `cart`
 --
 
-DROP TABLE IF EXISTS `cart`;
 CREATE TABLE IF NOT EXISTS `cart` (
   `cart_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -54,7 +51,6 @@ INSERT INTO `cart` (`cart_id`, `user_id`, `item_id`, `quantity`) VALUES
 -- Table structure for table `feedback`
 --
 
-DROP TABLE IF EXISTS `feedback`;
 CREATE TABLE IF NOT EXISTS `feedback` (
   `feedback_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -82,7 +78,6 @@ INSERT INTO `feedback` (`feedback_id`, `user_id`, `stall_id`, `rating`, `comment
 -- Table structure for table `food_storage`
 --
 
-DROP TABLE IF EXISTS `food_storage`;
 CREATE TABLE IF NOT EXISTS `food_storage` (
   `storage_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_id` int(11) NOT NULL,
@@ -101,7 +96,6 @@ CREATE TABLE IF NOT EXISTS `food_storage` (
 -- Table structure for table `gcash_payment_details`
 --
 
-DROP TABLE IF EXISTS `gcash_payment_details`;
 CREATE TABLE IF NOT EXISTS `gcash_payment_details` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
@@ -125,7 +119,6 @@ INSERT INTO `gcash_payment_details` (`id`, `order_id`, `gcash_reference`, `gcash
 -- Table structure for table `inventory`
 --
 
-DROP TABLE IF EXISTS `inventory`;
 CREATE TABLE IF NOT EXISTS `inventory` (
   `inventory_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_id` int(11) NOT NULL,
@@ -154,7 +147,6 @@ INSERT INTO `inventory` (`inventory_id`, `stall_id`, `product_id`, `quantity`, `
 -- Table structure for table `menu_items`
 --
 
-DROP TABLE IF EXISTS `menu_items`;
 CREATE TABLE IF NOT EXISTS `menu_items` (
   `item_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
@@ -185,7 +177,6 @@ INSERT INTO `menu_items` (`item_id`, `name`, `price`, `category`, `availability`
 -- Table structure for table `orders`
 --
 
-DROP TABLE IF EXISTS `orders`;
 CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` varchar(50) NOT NULL,
   `user_id` int(11) NOT NULL,
@@ -230,7 +221,6 @@ INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_d
 -- Table structure for table `order_details`
 --
 
-DROP TABLE IF EXISTS `order_details`;
 CREATE TABLE IF NOT EXISTS `order_details` (
   `order_detail_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
@@ -269,7 +259,6 @@ INSERT INTO `order_details` (`order_detail_id`, `order_id`, `item_id`, `quantity
 -- Table structure for table `payments`
 --
 
-DROP TABLE IF EXISTS `payments`;
 CREATE TABLE IF NOT EXISTS `payments` (
   `payment_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
@@ -311,7 +300,6 @@ INSERT INTO `payments` (`payment_id`, `order_id`, `user_id`, `amount`, `payment_
 -- Table structure for table `products`
 --
 
-DROP TABLE IF EXISTS `products`;
 CREATE TABLE IF NOT EXISTS `products` (
   `product_id` int(11) NOT NULL AUTO_INCREMENT,
   `product_name` varchar(100) NOT NULL,
@@ -326,7 +314,6 @@ CREATE TABLE IF NOT EXISTS `products` (
 -- Table structure for table `receipts`
 --
 
-DROP TABLE IF EXISTS `receipts`;
 CREATE TABLE IF NOT EXISTS `receipts` (
   `receipt_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
@@ -356,7 +343,6 @@ INSERT INTO `receipts` (`receipt_id`, `order_id`, `user_id`, `receipt_date`, `to
 -- Table structure for table `retailers`
 --
 
-DROP TABLE IF EXISTS `retailers`;
 CREATE TABLE IF NOT EXISTS `retailers` (
   `retailer_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -380,32 +366,63 @@ INSERT INTO `retailers` (`retailer_id`, `user_id`, `stall_id`) VALUES
 -- Table structure for table `stalls`
 --
 
-DROP TABLE IF EXISTS `stalls`;
 CREATE TABLE IF NOT EXISTS `stalls` (
   `stall_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
   `image_path` varchar(255) NOT NULL DEFAULT 'default_stall.jpg',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`stall_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `stalls`
 --
 
-INSERT INTO `stalls` (`stall_id`, `stall_name`, `description`, `image_path`) VALUES
-(1, 'Bonapetite', 'Delicious Burgers and Fries', 'images/store1.jpg'),
-(2, 'Kael', 'Fresh Drinks and Juices', 'images/store2.jpg'),
-(4, 'The Hungry Hippo', 'Sells snacks and beverages', 'images/stall1.jpg'),
-(5, 'Rice & Shine', 'Offers rice meals and soups', 'images/stall2.jpg'),
-(6, 'Juice Junction', 'Specializes in fresh fruit juices', 'images/stall3.jpg'),
-(7, 'Grillzilla', 'Fast food and grilled items', 'images/stall4.jpg'),
-(8, 'Sweet Tooth Haven', 'Desserts and sweets', 'images/stall5.jpg'),
-(9, 'Lutong Bahay', 'Authentic Filipino cuisine', 'images/stall6.jpg'),
-(10, 'Green Bites', 'Vegetarian and healthy options', 'images/stall7.jpg'),
-(11, 'Bean & Brew', 'Coffee, tea, and pastries', 'images/stall8.jpg'),
-(12, 'Taste of Asia', 'International dishes', 'images/stall9.jpg'),
-(14, 'EGO LAND', 'HEHEHE', 'uploads/stalls/1742542243_476974947_598964489616296_4802757199467559226_n.png');
+INSERT INTO `stalls` (`stall_id`, `stall_name`, `description`, `image_path`, `created_at`) VALUES
+(1, 'Bonapetite', 'Delicious Burgers and Fries', '../images/stalls/1742615929_stall-icon-24.jpeg', '2025-03-22 07:01:00'),
+(2, 'Kael', 'Fresh Drinks and Juices', 'images/store2.jpg', '2025-03-22 07:01:00'),
+(4, 'The Hungry Hippo', 'Sells snacks and beverages', 'images/stall1.jpg', '2025-03-22 07:01:00'),
+(5, 'Rice & Shine', 'Offers rice meals and soups', 'images/stall2.jpg', '2025-03-22 07:01:00'),
+(6, 'Juice Junction', 'Specializes in fresh fruit juices', 'images/stall3.jpg', '2025-03-22 07:01:00'),
+(7, 'Grillzilla', 'Fast food and grilled items', 'images/stall4.jpg', '2025-03-22 07:01:00'),
+(8, 'Sweet Tooth Haven', 'Desserts and sweets', 'images/stall5.jpg', '2025-03-22 07:01:00'),
+(9, 'Lutong Bahay', 'Authentic Filipino cuisine', '../images/stalls/1742615905_stall-icon-24.jpeg', '2025-03-22 07:01:00'),
+(10, 'Green Bites', 'Vegetarian and healthy options', '../images/stalls/1742615960_stall-icon-24.jpeg', '2025-03-22 07:01:00'),
+(11, 'Bean & Brew', 'Coffee, tea, and pastries', '../images/stalls/1742615920_stall-icon-24.jpeg', '2025-03-22 07:01:00'),
+(12, 'Taste of Asia', 'International dishes', 'images/stall9.jpg', '2025-03-22 07:01:00'),
+(14, 'EGO LAND', 'HEHEHE', '../images/stalls/1742615939_stall-icon-24.jpeg', '2025-03-22 07:01:00'),
+(15, 'Levi', 'YUJkghjytghkj', 'default_stall.jpg', '2025-03-22 10:54:51');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stall_application`
+--
+
+CREATE TABLE IF NOT EXISTS `stall_application` (
+  `application_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `stall_name` varchar(100) NOT NULL,
+  `stall_description` text DEFAULT NULL,
+  `application_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('Pending','Approved','Denied') DEFAULT 'Pending',
+  `verification_date` timestamp NULL DEFAULT NULL,
+  `birth_certificate` varchar(255) DEFAULT NULL,
+  `tin_number` varchar(255) DEFAULT NULL,
+  `business_permit` varchar(255) DEFAULT NULL,
+  `valid_id` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`application_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `stall_application`
+--
+
+INSERT INTO `stall_application` (`application_id`, `user_id`, `stall_name`, `stall_description`, `application_date`, `status`, `verification_date`, `birth_certificate`, `tin_number`, `business_permit`, `valid_id`) VALUES
+(1, 18, 'Levi', 'YUJkghjytghkj', '2025-03-22 09:23:39', 'Approved', '2025-03-22 10:54:51', 'images/application/birth/67de819b067e1.jpg', 'images/application/tin/67de819b06f3a.jpg', 'images/application/permit/67de819b07986.jpg', 'images/application/id/67de819b0810e.jpg'),
+(2, 18, 'Levi', 'YUJkghjytghkj', '2025-03-22 09:23:49', 'Denied', '2025-03-22 12:33:12', 'images/application/birth/67de81a5a221a.jpg', 'images/application/tin/67de81a5a2cec.jpg', 'images/application/permit/67de81a5a35a0.jpg', 'images/application/id/67de81a5a3db6.jpg');
 
 -- --------------------------------------------------------
 
@@ -413,7 +430,6 @@ INSERT INTO `stalls` (`stall_id`, `stall_name`, `description`, `image_path`) VAL
 -- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
   `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
@@ -429,7 +445,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `email_unique` (`email_unique`),
   UNIQUE KEY `unique_email_constraint` (`email`,`role`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
@@ -442,7 +458,7 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `role`, `phone`, `a
 (4, 'zcdasad@gasfsas.coaj', '123123@gmail.com', '$2y$10$.7F2Ud.lXqib.uNErYlc1uVy162S.7KKxeB64PyORXj8sHhBx5aTq', 'Student', NULL, NULL, 1, 'images/default-profile.jpg'),
 (6, 'egoian', 'ego123@gmail.com', '$2y$10$v7CN02fZjTAVgoheVDzBWOiHtbnsTRbxZGJHyp/v7mf4seTHKKWSy', 'Student', NULL, NULL, 1, 'images/profiles/Ego.jpeg'),
 (7, 'egoego123', 'ego123123123@gmail.com', '$2y$10$hhh3B7FizI7.VqRDV4vgcuraBJF/8XuR88mo.qe0kkFhcvEXRYxIy', 'Admin', NULL, NULL, 1, 'images/default-profile.jpg'),
-(8, 'Egos', 'ad123min@gmail.com', '$2y$10$aJ5tAaRF477X6kvm.kjFkuy8VKeNpGdBHKAq2JTWkU05BwKVv2J0i', 'Student', NULL, NULL, 1, 'images/default-profile.jpg'),
+(8, 'Egos', 'ad123min@gmail.com', '$2y$10$aJ5tAaRF477X6kvm.kjFkuy8VKeNpGdBHKAq2JTWkU05BwKVv2J0i', 'Admin', NULL, NULL, 1, 'images/default-profile.jpg'),
 (9, 'Ianzae Ryan P. Ego', 'tolitsjacks@gmail.com', '$2y$10$TJZaVULCZEB6ho7ZGW65JuKVXllthAocnuNxVlIrdzlUgtKLbwJOe', 'Student', NULL, NULL, 1, 'images/default-profile.jpg'),
 (11, 'Meinfried', '123@gmail.com', '$2y$10$dA6o1HwMunCiebYLSZo5Qe.1WF6SavcA0xaDDjXUxdYL9ETd1u/Ey', 'Student', NULL, NULL, 1, 'images/default-profile.jpg'),
 (12, 'Allan', 'a@gmail.com', '$2y$10$jS3SFUAO0CMTvBPaAO0hveeKYWM7K3EmGcNZBxW9v/FEd3dewbAQS', 'Student', NULL, NULL, 1, 'images/default-profile.jpg'),
@@ -450,7 +466,8 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `role`, `phone`, `a
 (14, 'bor', 'borjabisaya@gmail.com', '$2y$10$CSxsLT/j4yOHoyTD8vBuKO0QvYbOhPVPq90aIHs6jHiLIQ4b8aeMK', 'Retailer', NULL, NULL, 1, 'images/default-profile.jpg'),
 (15, 'Melvs', 'w@gmail.com', '$2y$10$OdI59Cgo1bxHCpANUlNYBOgjZ/EpR40uSaQNXmGfPX.IMSnT0RZBK', 'Retailer', NULL, NULL, 1, 'images/default-profile.jpg'),
 (16, 'egoego123', 'allanmonforte123123@gmail.com', '$2y$10$5AGxDcKxfzFRckmgkTyWU.VdIsQ7uFtvV9JzO.oqXYnlz3ZYOPNMK', 'Admin', NULL, NULL, 1, 'images/default-profile.jpg'),
-(17, 'melvinbisaya', 'melvin@bisaya.com', '$2y$10$xkpROALC3SW4RlqJMFdTR.QJkX1WTIoOEiPHTbwxQLL5h/ENyhFfm', 'Student', '123', '123', 1, 'images/profiles/476974947_598964489616296_4802757199467559226_n.png');
+(17, 'melvinbisaya', 'melvin@bisaya.com', '$2y$10$xkpROALC3SW4RlqJMFdTR.QJkX1WTIoOEiPHTbwxQLL5h/ENyhFfm', 'Student', '123', '123', 1, 'images/profiles/476974947_598964489616296_4802757199467559226_n.png'),
+(18, 'Tester', 'kjin53321@gmail.com', '$2y$10$3BxsRK.HGf.hVERreGr9leiyXdV.bsL87yrQruH7gjLNgbCWIOkrS', 'Retailer', NULL, NULL, 1, 'images/default-profile.jpg');
 
 --
 -- Constraints for dumped tables
@@ -512,6 +529,12 @@ ALTER TABLE `payments`
 --
 ALTER TABLE `retailers`
   ADD CONSTRAINT `retailers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `stall_application`
+--
+ALTER TABLE `stall_application`
+  ADD CONSTRAINT `stall_application_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
