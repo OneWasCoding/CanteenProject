@@ -11,12 +11,12 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 
-// Handle cancel order action for orders that are "Partially Completed"
+// Handle cancel order action for orders that are "Pending"
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     $order_id = $_POST['order_id'];
     
-    // Update order status to "Cancelled" only if it's currently "Partially Completed"
-    $sql_cancel = "UPDATE orders SET order_status = 'Cancelled' WHERE order_id = ? AND user_id = ? AND order_status = 'Partially Completed'";
+    // Update order status to "Cancelled" only if it's currently "Pending"
+    $sql_cancel = "UPDATE orders SET order_status = 'Cancelled' WHERE order_id = ? AND user_id = ? AND order_status = 'Pending'";
     $stmt_cancel = $con->prepare($sql_cancel);
     $stmt_cancel->bind_param("si", $order_id, $user_id);
 
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     $stmt_cancel->close();
 }
 
-// Base SQL query: select only orders with status Completed, Partially Completed, or Cancelled
+// Base SQL query: select orders with statuses Pending, Completed, Partially Completed, or Cancelled
 $sql = "
     SELECT o.order_id, o.order_date, o.total_price, o.order_status,
            GROUP_CONCAT(m.name SEPARATOR ', ') AS items,
@@ -39,7 +39,7 @@ $sql = "
     LEFT JOIN order_details od ON o.order_id = od.order_id
     LEFT JOIN menu_items m ON od.item_id = m.item_id
     WHERE o.user_id = ? 
-      AND o.order_status IN ('Completed','Partially Completed','Cancelled')
+      AND o.order_status IN ('Pending','Completed','Partially Completed','Cancelled')
 ";
 
 if ($filter_status !== 'all') {
@@ -71,7 +71,7 @@ $stmt->close();
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.min.css">
     <style>
         body {
             background: linear-gradient(135deg, #f8f9fa, #e4e5f1);
@@ -234,6 +234,7 @@ $stmt->close();
         <h2><i class="bi bi-clock-history"></i> Order History</h2>
         <div class="filters text-center mb-4">
             <a href="?status=all" class="btn <?php echo $filter_status === 'all' ? 'active' : ''; ?>"><i class="bi bi-list"></i> All Orders</a>
+            <a href="?status=Pending" class="btn <?php echo $filter_status === 'Pending' ? 'active' : ''; ?>"><i class="bi bi-hourglass-split"></i> Pending</a>
             <a href="?status=Completed" class="btn <?php echo $filter_status === 'Completed' ? 'active' : ''; ?>"><i class="bi bi-check-circle"></i> Completed</a>
             <a href="?status=Partially Completed" class="btn <?php echo $filter_status === 'Partially Completed' ? 'active' : ''; ?>"><i class="bi bi-hourglass-split"></i> Partially Completed</a>
             <a href="?status=Cancelled" class="btn <?php echo $filter_status === 'Cancelled' ? 'active' : ''; ?>"><i class="bi bi-x-circle"></i> Cancelled</a>
@@ -277,9 +278,9 @@ $stmt->close();
                         </div>
                     </div>
                     <div class="actions">
-                        <?php if ($order['order_status'] === 'Partially Completed'): ?>
+                        <?php if ($order['order_status'] === 'Pending'): ?>
                             <form method="POST" style="display: inline;">
-                                <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
+                                <input type="hidden" name="order_id" value="<?php echo htmlspecialchars($order['order_id']); ?>">
                                 <button type="submit" name="cancel_order" class="btn cancel"><i class="bi bi-x-circle"></i> Cancel Order</button>
                             </form>
                         <?php endif; ?>

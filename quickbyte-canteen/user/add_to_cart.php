@@ -2,48 +2,58 @@
 session_start();
 include '../config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get the JSON data from the request
-    $data = json_decode(file_get_contents('php://input'), true);
+header('Content-Type: application/json');
 
-    $item_id = $data['item_id'];
-    $user_id = $_SESSION['user_id'];
-
-    // Check if the item exists in inventory and has sufficient stock
-    // Updated: Use 'quantity' and compare using 'product_id'
-    $sql = "SELECT quantity FROM inventory WHERE product_id = ?";
-    $stmt = $con->prepare($sql);
-    $stmt->bind_param("i", $item_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $inventory = $result->fetch_assoc();
-    $stmt->close();
-
-    if (!$inventory || $inventory['quantity'] <= 0) {
-        echo json_encode(['success' => false, 'message' => 'Item is out of stock.']);
-        exit();
-    }
-
-    // Check if the item already exists in the cart
-    $sql = "SELECT * FROM cart WHERE user_id = ? AND item_id = ?";
-    $stmt = $con->prepare($sql);
-    $stmt->bind_param("ii", $user_id, $item_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        // Update the quantity if the item already exists
-        $sql = "UPDATE cart SET quantity = quantity + 1 WHERE user_id = ? AND item_id = ?";
-    } else {
-        // Insert a new row if the item doesn't exist
-        $sql = "INSERT INTO cart (user_id, item_id, quantity) VALUES (?, ?, 1)";
-    }
-
-    $stmt = $con->prepare($sql);
-    $stmt->bind_param("ii", $user_id, $item_id);
-    $success = $stmt->execute();
-    $stmt->close();
-
-    echo json_encode(['success' => $success]);
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'User not logged in.']);
+    exit();
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents("php://input"));
+    $itemId = $data->item_id;
+
+    $userId = $_SESSION['user_id'];
+
+    // Check if item is already in cart
+    $sql_check = "SELECT quantity FROM cart WHERE user_id = ? AND item_id = ?";
+    $stmt_check = $con->prepare($sql_check);
+    $stmt_check->bind_param("ii", $userId, $itemId);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+
+    if ($result_check->num_rows > 0) {
+        // Item already in cart, update quantity
+        $row = $result_check->fetch_assoc();
+        $newQuantity = $row['quantity'] + 1;
+
+        $sql_update = "UPDATE cart SET quantity = ? WHERE user_id = ? AND item_id = ?";
+        $stmt_update = $con->prepare($sql_update);
+        $stmt_update->bind_param("iii", $newQuantity, $userId, $itemId);
+
+        if ($stmt_update->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Cart updated.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update cart.']);
+        }
+        $stmt_update->close();
+    } else {
+        // Item not in cart, add new item
+        $sql_insert = "INSERT INTO cart (user_id, item_id, quantity) VALUES (?, ?, 1)";
+        $stmt_insert = $con->prepare($sql_insert);
+        $stmt_insert->bind_param("ii", $userId, $itemId);
+
+        if ($stmt_insert->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Item added to cart.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to add item to cart.']);
+        }
+        $stmt_insert->close();
+    }
+    $stmt_check->close();
+} else {
+    echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+}
+
+$con->close();
 ?>

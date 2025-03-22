@@ -38,22 +38,43 @@ $success = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $order_status = $_POST['order_status'];
     
-    // Update order status
-    $sql_update = "UPDATE orders SET order_status = ? WHERE order_id = ?";
-    $stmt_update = $con->prepare($sql_update);
-    $stmt_update->bind_param("ss", $order_status, $order_id);
-    
-    if ($stmt_update->execute()) {
+    try {
+        // Begin transaction
+        $con->begin_transaction();
+        
+        // Update order status
+        $sql_update = "UPDATE orders SET order_status = ? WHERE order_id = ?";
+        $stmt_update = $con->prepare($sql_update);
+        $stmt_update->bind_param("ss", $order_status, $order_id);
+        $stmt_update->execute();
+        $stmt_update->close();
+        
+        // If the new status is Completed, deduct stock from food_storage
+        if ($order_status === 'Completed') {
+            $sql_deduct = "
+                UPDATE food_storage fs
+                JOIN order_details od ON fs.item_id = od.item_id
+                JOIN orders o ON od.order_id = o.order_id
+                SET fs.quantity = GREATEST(fs.quantity - od.quantity, 0)
+                WHERE o.order_id = ? AND o.order_status = 'Completed'
+            ";
+            $stmt_deduct = $con->prepare($sql_deduct);
+            $stmt_deduct->bind_param("s", $order_id);
+            $stmt_deduct->execute();
+            $stmt_deduct->close();
+        }
+        
+        $con->commit();
         $success = "Order updated successfully.";
         header("Location: manage_orders.php?success=1");
         exit();
-    } else {
-        $error = "Failed to update order.";
+    } catch (mysqli_sql_exception $e) {
+        $con->rollback();
+        $error = "Failed to update order: " . $e->getMessage();
     }
-    $stmt_update->close();
 }
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

@@ -16,11 +16,22 @@ if (!isset($_GET['item_id']) || empty($_GET['item_id'])) {
 
 $item_id = intval($_GET['item_id']);
 
-// Fetch product details and stock information using the updated SQL
+// Fetch product details and stock information from menu_items, inventory, and food_storage tables
 $sql = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, m.description, m.stall_id, i.quantity AS quantity_in_stock
+    SELECT 
+        m.item_id, 
+        m.name, 
+        m.price, 
+        m.category, 
+        m.image_path, 
+        m.description, 
+        m.stall_id, 
+        COALESCE(i.quantity, 0) AS inventory_stock,
+        COALESCE(fs.quantity, 0) AS food_storage_stock,
+        (COALESCE(i.quantity, 0) + COALESCE(fs.quantity, 0)) AS total_stock
     FROM menu_items m
     LEFT JOIN inventory i ON m.item_id = i.product_id
+    LEFT JOIN food_storage fs ON m.item_id = fs.item_id
     WHERE m.item_id = ?
 ";
 $stmt = $con->prepare($sql);
@@ -36,9 +47,7 @@ if (!$product) {
 }
 
 // Fetch reviews for the stall offering this product.
-// Note: Since your feedback table does not include a product (item) column,
-// we fetch reviews based on the stall_id. This means that reviews are linked
-// to the stall, not directly to the product.
+// Since feedback is linked to the stall, we fetch reviews using the stall_id.
 $sql_reviews = "
     SELECT f.feedback_id, f.rating, f.comment, f.created_at, f.user_id, u.name AS reviewer_name 
     FROM feedback f 
@@ -81,7 +90,7 @@ $averageRating = $countReviews > 0 ? round($totalRating / $countReviews, 1) : 0;
             min-height: 100vh;
             font-family: 'Poppins', sans-serif;
         }
-        /* Navbar (same as reviews.php) */
+        /* Navbar styling */
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -217,18 +226,18 @@ $averageRating = $countReviews > 0 ? round($totalRating / $countReviews, 1) : 0;
             <div class="product-price">₱<?php echo number_format($product['price'], 2); ?></div>
             <div class="product-description"><?php echo htmlspecialchars($product['description'] ?? 'No description available.'); ?></div>
             <p class="stock-info">
-                <?php if ($product['quantity_in_stock'] > 0): ?>
-                    <strong>In Stock:</strong> <?php echo $product['quantity_in_stock']; ?> left
+                <?php if ($product['total_stock'] > 0): ?>
+                    <strong>In Stock:</strong> <?php echo $product['total_stock']; ?> left
                 <?php else: ?>
                     <strong>Sold Out</strong>
                 <?php endif; ?>
             </p>
             <button
-                class="<?php echo $product['quantity_in_stock'] > 0 ? 'btn-add-cart' : 'btn-sold-out'; ?>"
+                class="<?php echo $product['total_stock'] > 0 ? 'btn-add-cart' : 'btn-sold-out'; ?>"
                 onclick="addToCart(<?php echo $product['item_id']; ?>)"
-                <?php echo $product['quantity_in_stock'] <= 0 ? 'disabled' : ''; ?>
+                <?php echo $product['total_stock'] <= 0 ? 'disabled' : ''; ?>
             >
-                <?php echo $product['quantity_in_stock'] > 0 ? '<i class="fas fa-cart-plus"></i> Add to Cart' : 'Sold Out'; ?>
+                <?php echo $product['total_stock'] > 0 ? '<i class="fas fa-cart-plus"></i> Add to Cart' : 'Sold Out'; ?>
             </button>
         </div>
     </div>

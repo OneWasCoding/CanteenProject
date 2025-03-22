@@ -56,7 +56,7 @@ if (empty($cart_items)) {
         $grouped_items[$storeId]['group_total'] += $item['price'] * $item['quantity'];
     }
     
-    // (Optional) Overall total cost
+    // Overall total cost (optional)
     $total_cost = 0;
     foreach ($grouped_items as $group) {
         $total_cost += $group['group_total'];
@@ -108,7 +108,7 @@ if (empty($cart_items)) {
             $error = "Invalid payment method selected.";
         }
         
-        // If no errors, process the orders
+        // If no errors, process the orders (stock is not deducted at checkout)
         if (empty($error)) {
             try {
                 $con->begin_transaction();
@@ -142,8 +142,8 @@ if (empty($cart_items)) {
                     }
                     
                     // Insert payment record into payments table
-                    $sql_payment = "INSERT INTO payments (order_id, user_id, amount, payment_method, status)
-                                    VALUES (?, ?, ?, ?, 'pending')";
+                    $sql_payment = "INSERT INTO payments (order_id, user_id, amount, status)
+                                    VALUES (?, ?, ?, ?)";
                     $stmt_payment = $con->prepare($sql_payment);
                     $stmt_payment->bind_param("sids", $order_id, $user_id, $group['group_total'], $payment_method);
                     $stmt_payment->execute();
@@ -286,7 +286,7 @@ if (empty($cart_items)) {
                 <p>Review your order and proceed to payment.</p>
             </div>
 
-            <!-- Show error or success messages (no big green bar) -->
+            <!-- Show error or success messages -->
             <?php if (!empty($error)): ?>
                 <div class="alert alert-danger">
                     <?php echo htmlspecialchars($error); ?>

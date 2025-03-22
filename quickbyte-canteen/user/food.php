@@ -24,10 +24,19 @@ $sort_order = isset($_GET['sort']) ? $_GET['sort'] : 'default';
 
 // Build the SQL query based on the selected category and sort order
 $sql = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity AS quantity_in_stock
-    FROM menu_items m
-    LEFT JOIN inventory i ON m.item_id = i.product_id
-    WHERE m.availability = 1
+    SELECT 
+        m.item_id, 
+        m.name, 
+        m.price, 
+        m.category, 
+        m.image_path, 
+        COALESCE(fs.quantity, 0) AS quantity_in_stock
+    FROM 
+        menu_items m
+    LEFT JOIN 
+        food_storage fs ON m.item_id = fs.item_id
+    WHERE 
+        m.availability = 'Available'
 ";
 
 if ($category_filter !== 'all') {
@@ -280,7 +289,7 @@ $stmt->close();
                             <img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
                             <div class="card-body">
                                 <h4><?php echo htmlspecialchars($item['name']); ?></h4>
-                                <p><strong>Price:</strong> $<?php echo number_format($item['price'], 2); ?></p>
+                                <p><strong>Price:</strong> ₱<?php echo number_format($item['price'], 2); ?></p>
                                 <p><strong>Category:</strong> <?php echo htmlspecialchars($item['category']); ?></p>
                                 <p class="stock-info">
                                     <?php if ($item['quantity_in_stock'] > 0): ?>
@@ -329,8 +338,23 @@ $stmt->close();
             .then(data => {
                 if (data.success) {
                     alert('Item added to cart!');
+                    // Optional: Update cart count in navbar
+                    updateCartCount();
                 } else {
                     alert(data.message || 'Failed to add item to cart.');
+                }
+            });
+        }
+
+        function updateCartCount() {
+            // Implement logic to fetch and update cart count
+            // Example:
+            fetch('get_cart_count.php')
+            .then(response => response.json())
+            .then(data => {
+                const cartLink = document.querySelector('a[href="cart.php"]');
+                if (cartLink) {
+                    cartLink.innerHTML = `<i class="bi bi-cart"></i> Cart (${data.count})`;
                 }
             });
         }

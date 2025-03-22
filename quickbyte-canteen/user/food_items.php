@@ -10,34 +10,103 @@ if (!isset($_SESSION['user_id'])) {
 
 // Get the stall ID from the query string
 if (!isset($_GET['stall_id']) || empty($_GET['stall_id'])) {
-    header("Location: index.php");
+    header("Location: index.php"); // Redirect to homepage if stall ID is missing
     exit();
 }
-
 $stall_id = $_GET['stall_id'];
 
-// Fetch stall details using the correct column name "stall_name"
-$sql_stall = "SELECT stall_name, description, image_path FROM stalls WHERE stall_id = ?";
-$stmt_stall = $con->prepare($sql_stall);
-$stmt_stall->bind_param("i", $stall_id);
-$stmt_stall->execute();
-$result_stall = $stmt_stall->get_result();
-$stall = $result_stall->fetch_assoc();
-$stmt_stall->close();
+// --- Function to fetch stall details ---
+function getStallDetails($con, $stall_id) {
+    $sql_stall = "SELECT stall_name, description, image_path FROM stalls WHERE stall_id = ?";
+    $stmt_stall = $con->prepare($sql_stall);
+    $stmt_stall->bind_param("i", $stall_id);
+    $stmt_stall->execute();
+    $result_stall = $stmt_stall->get_result();
+    $stall = $result_stall->fetch_assoc();
+    $stmt_stall->close();
 
+    return $stall;
+}
+
+// --- Function to fetch categories for the current stall ---
+function getCategories($con, $stall_id) {
+    $sql_categories = "SELECT DISTINCT category FROM menu_items WHERE stall_id = ? ORDER BY category ASC";
+    $stmt_categories = $con->prepare($sql_categories);
+    $stmt_categories->bind_param("i", $stall_id);
+    $stmt_categories->execute();
+    $result_categories = $stmt_categories->get_result();
+    $categories = $result_categories->fetch_all(MYSQLI_ASSOC);
+    $stmt_categories->close();
+
+    return $categories;
+}
+
+// Fetch stall details
+$stall = getStallDetails($con, $stall_id);
 if (!$stall) {
     header("Location: index.php");
     exit();
 }
 
-// Fetch all categories from the menu_items table for the current stall
-$sql_categories = "SELECT DISTINCT category FROM menu_items WHERE stall_id = ? ORDER BY category ASC";
-$stmt_categories = $con->prepare($sql_categories);
-$stmt_categories->bind_param("i", $stall_id);
-$stmt_categories->execute();
-$result_categories = $stmt_categories->get_result();
-$categories = $result_categories->fetch_all(MYSQLI_ASSOC);
-$stmt_categories->close();
+// Fetch categories for the current stall
+$categories = getCategories($con, $stall_id);
+
+// --- Function to build and execute the menu items query ---
+function getMenuItems($con, $stall_id, $category_filter, $sort_order) {
+    $sql = "
+        SELECT 
+            m.item_id, 
+            m.name, 
+            m.price, 
+            m.category, 
+            m.image_path, 
+            COALESCE(SUM(fs.quantity), 0) AS quantity_in_stock,
+            CASE 
+                WHEN COALESCE(SUM(fs.quantity), 0) > 0 THEN 'Available'
+                ELSE 'Out Of Stock'
+            END AS availability_status
+        FROM menu_items m
+        LEFT JOIN food_storage fs ON m.item_id = fs.item_id
+        WHERE m.stall_id = ?";
+
+    if ($category_filter !== 'all') {
+        $sql .= " AND m.category = ?";
+    }
+
+    $sql .= " GROUP BY m.item_id, m.name, m.price, m.category, m.image_path"; // Group by menu item fields
+
+    // Add sorting
+    switch ($sort_order) {
+        case 'price_low_to_high':
+            $sql .= " ORDER BY m.price ASC";
+            break;
+        case 'price_high_to_low':
+            $sql .= " ORDER BY m.price DESC";
+            break;
+        case 'name_a_to_z':
+            $sql .= " ORDER BY m.name ASC";
+            break;
+        case 'name_z_to_a':
+            $sql .= " ORDER BY m.name DESC";
+            break;
+        default:
+            $sql .= " ORDER BY m.category ASC"; // Default sort by category
+            break;
+    }
+
+    $stmt = $con->prepare($sql);
+    if ($category_filter !== 'all') {
+        $stmt->bind_param("is", $stall_id, $category_filter);
+    } else {
+        $stmt->bind_param("i", $stall_id);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $menuItems = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    return $menuItems;
+}
 
 // Get the selected category from the query string (default to 'all')
 $category_filter = isset($_GET['category']) ? $_GET['category'] : 'all';
@@ -45,48 +114,8 @@ $category_filter = isset($_GET['category']) ? $_GET['category'] : 'all';
 // Get the selected sort order from the query string (default to 'default')
 $sort_order = isset($_GET['sort']) ? $_GET['sort'] : 'default';
 
-// Build the SQL query based on the selected category and sort order
-$sql = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity AS quantity_in_stock
-    FROM menu_items m
-    LEFT JOIN inventory i ON m.item_id = i.product_id
-    WHERE m.stall_id = ? AND m.availability = 1
-";
-
-if ($category_filter !== 'all') {
-    $sql .= " AND m.category = ?";
-}
-
-// Add sorting
-switch ($sort_order) {
-    case 'price_low_to_high':
-        $sql .= " ORDER BY m.price ASC";
-        break;
-    case 'price_high_to_low':
-        $sql .= " ORDER BY m.price DESC";
-        break;
-    case 'name_a_to_z':
-        $sql .= " ORDER BY m.name ASC";
-        break;
-    case 'name_z_to_a':
-        $sql .= " ORDER BY m.name DESC";
-        break;
-    default:
-        $sql .= " ORDER BY m.category ASC"; // Default sort by category
-        break;
-}
-
-// Prepare and execute the query
-$stmt = $con->prepare($sql);
-if ($category_filter !== 'all') {
-    $stmt->bind_param("is", $stall_id, $category_filter);
-} else {
-    $stmt->bind_param("i", $stall_id);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-$menuItems = $result->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+// Fetch menu items
+$menuItems = getMenuItems($con, $stall_id, $category_filter, $sort_order);
 ?>
 
 <!DOCTYPE html>
@@ -100,6 +129,7 @@ $stmt->close();
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
+        /* Your existing CSS styles */
         body {
             background-color: #f8f9fa;
             font-family: 'Poppins', sans-serif;
@@ -265,6 +295,7 @@ $stmt->close();
                 </a>
             <?php endforeach; ?>
         </div>
+
         <!-- Sorting Options -->
         <div class="sorting-options">
             <span>Sort by:</span>

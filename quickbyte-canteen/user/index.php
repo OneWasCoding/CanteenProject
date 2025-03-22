@@ -8,89 +8,107 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-/* --- Existing Featured Products Query --- */
-$sql_featured = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity AS quantity_in_stock
-    FROM menu_items m
-    LEFT JOIN inventory i ON m.item_id = i.product_id
-    WHERE m.availability = 1
-    ORDER BY RAND() LIMIT 6
-";
-$stmt_featured = $con->prepare($sql_featured);
-$stmt_featured->execute();
-$result_featured = $stmt_featured->get_result();
-$featured_products = $result_featured->fetch_all(MYSQLI_ASSOC);
-$stmt_featured->close();
+/* --- Queries for Top Elements --- */
 
-/* --- New Query: Top Seller of Retailer --- */
-/* This query selects the retailer (user) whose stall has the highest number of orders */
-$sql_top_seller = "
-    SELECT u.user_id, u.name, COUNT(o.order_id) AS total_orders
-    FROM retailers r
-    JOIN orders o ON r.stall_id = o.stall_id
-    JOIN users u ON r.user_id = u.user_id
-    GROUP BY u.user_id
-    ORDER BY total_orders DESC
-    LIMIT 1
+// Top Feedback
+$sql_top_feedback = "
+    SELECT f.feedback_id, u.name AS user_name, s.stall_name, f.rating, f.comment
+    FROM feedback f
+    JOIN users u ON f.user_id = u.user_id
+    JOIN stalls s ON f.stall_id = s.stall_id
+    ORDER BY f.rating DESC
+    LIMIT 3
 ";
-$stmt_top_seller = $con->prepare($sql_top_seller);
-$stmt_top_seller->execute();
-$result_top_seller = $stmt_top_seller->get_result();
-$top_seller = $result_top_seller->fetch_assoc();
-$stmt_top_seller->close();
+$stmt_top_feedback = $con->prepare($sql_top_feedback);
+$stmt_top_feedback->execute();
+$result_top_feedback = $stmt_top_feedback->get_result();
+$top_feedback = $result_top_feedback->fetch_all(MYSQLI_ASSOC);
+$stmt_top_feedback->close();
 
-/* --- New Query: Top Store --- */
-/* This query selects the stall with the highest number of orders */
-$sql_top_store = "
+// Top Stalls
+$sql_top_stalls = "
     SELECT s.stall_id, s.stall_name, COUNT(o.order_id) AS total_orders
     FROM stalls s
     JOIN orders o ON s.stall_id = o.stall_id
     GROUP BY s.stall_id
     ORDER BY total_orders DESC
-    LIMIT 1
+    LIMIT 3
 ";
-$stmt_top_store = $con->prepare($sql_top_store);
-$stmt_top_store->execute();
-$result_top_store = $stmt_top_store->get_result();
-$top_store = $result_top_store->fetch_assoc();
-$stmt_top_store->close();
+$stmt_top_stalls = $con->prepare($sql_top_stalls);
+$stmt_top_stalls->execute();
+$result_top_stalls = $stmt_top_stalls->get_result();
+$top_stalls = $result_top_stalls->fetch_all(MYSQLI_ASSOC);
+$stmt_top_stalls->close();
 
-/* --- New Query: Top Product --- */
-/* This query selects the product with the highest total quantity sold */
-$sql_top_product = "
+// Top Products
+$sql_top_products = "
     SELECT m.item_id, m.name, m.price, m.category, m.image_path, SUM(od.quantity) AS total_sold
     FROM order_details od
     JOIN menu_items m ON od.item_id = m.item_id
     GROUP BY m.item_id
     ORDER BY total_sold DESC
-    LIMIT 1
+    LIMIT 3
 ";
-$stmt_top_product = $con->prepare($sql_top_product);
-$stmt_top_product->execute();
-$result_top_product = $stmt_top_product->get_result();
-$top_product = $result_top_product->fetch_assoc();
-$stmt_top_product->close();
+$stmt_top_products = $con->prepare($sql_top_products);
+$stmt_top_products->execute();
+$result_top_products = $stmt_top_products->get_result();
+$top_products = $result_top_products->fetch_all(MYSQLI_ASSOC);
+$stmt_top_products->close();
 
-/* --- New Query: Featured Product from Different Stall --- */
-/* This query selects one product per stall (using the minimum item_id per stall) */
-$sql_featured_diff = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, i.quantity AS quantity_in_stock, m.stall_id
-    FROM menu_items m
-    LEFT JOIN inventory i ON m.item_id = i.product_id
-    WHERE m.availability = 1
-      AND m.item_id IN (
-          SELECT MIN(m2.item_id)
-          FROM menu_items m2
-          WHERE m2.availability = 1
-          GROUP BY m2.stall_id
-      )
-    LIMIT 6
+// Top Users
+$sql_top_users = "
+    SELECT u.user_id, u.name, COUNT(o.order_id) AS total_orders
+    FROM users u
+    JOIN orders o ON u.user_id = o.user_id
+    GROUP BY u.user_id
+    ORDER BY total_orders DESC
+    LIMIT 3
 ";
-$stmt_featured_diff = $con->prepare($sql_featured_diff);
-$stmt_featured_diff->execute();
-$result_featured_diff = $stmt_featured_diff->get_result();
-$featured_diff_products = $result_featured_diff->fetch_all(MYSQLI_ASSOC);
-$stmt_featured_diff->close();
+$stmt_top_users = $con->prepare($sql_top_users);
+$stmt_top_users->execute();
+$result_top_users = $stmt_top_users->get_result();
+$top_users = $result_top_users->fetch_all(MYSQLI_ASSOC);
+$stmt_top_users->close();
+
+// Most Rated Products
+$sql_most_rated_products = "
+    SELECT 
+        m.item_id, 
+        m.name, 
+        m.price, 
+        m.category, 
+        m.image_path, 
+        AVG(f.rating) AS avg_rating
+    FROM 
+        menu_items m
+    LEFT JOIN 
+        feedback f ON m.stall_id = f.stall_id  
+    GROUP BY 
+        m.item_id
+    ORDER BY 
+        avg_rating DESC
+    LIMIT 3
+";
+$stmt_most_rated_products = $con->prepare($sql_most_rated_products);
+$stmt_most_rated_products->execute();
+$result_most_rated_products = $stmt_most_rated_products->get_result();
+$most_rated_products = $result_most_rated_products->fetch_all(MYSQLI_ASSOC);
+$stmt_most_rated_products->close();
+
+// Featured Products
+$sql_featured_products = "
+    SELECT m.item_id, m.name, m.price, m.category, m.image_path, fs.quantity AS quantity_in_stock
+    FROM menu_items m
+    LEFT JOIN food_storage fs ON m.item_id = fs.item_id
+    WHERE m.availability = 'Available'
+    ORDER BY RAND() LIMIT 6
+";
+$stmt_featured_products = $con->prepare($sql_featured_products);
+$stmt_featured_products->execute();
+$result_featured_products = $stmt_featured_products->get_result();
+$featured_products = $result_featured_products->fetch_all(MYSQLI_ASSOC);
+$stmt_featured_products->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -103,6 +121,8 @@ $stmt_featured_diff->close();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -110,46 +130,70 @@ $stmt_featured_diff->close();
             margin: 0;
             padding: 0;
             color: #333;
+            background-color: #f8f9fa;
         }
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            padding: 15px 0;
         }
         .navbar-brand {
             font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            transform: translateY(-2px);
         }
         .hero-section {
-            height: 100vh;
+            height: 85vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             color: white;
             position: relative;
+            padding-top: 70px;
         }
         .hero-section h1 {
-            font-size: 4rem;
-            font-weight: bold;
+            font-size: 3.5rem;
+            font-weight: 700;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1.5rem;
+            animation: fadeIn 1.5s ease-in;
         }
         .hero-section p {
             color: white;
-            font-weight: bold;
+            font-weight: 500;
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
             font-size: 1.5rem;
-            margin-top: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 2s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .btn-cta {
             background-color: #e44d26;
             color: white;
             border-radius: 30px;
-            padding: 10px 20px;
-            font-size: 1.2rem;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
             transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: none;
         }
         .btn-cta:hover {
             background-color: #ff7f50;
+            transform: translateY(-5px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+            color: white;
         }
         svg {
             position: fixed;
@@ -191,78 +235,281 @@ $stmt_featured_diff->close();
         .blob-path-4 {
             fill: #e44d26;
         }
-        /* Section styles */
-        .section-title {
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 2rem;
-            font-weight: bold;
+        
+        /* Redesigned elements */
+        .page-section {
+            padding: 80px 0;
+            position: relative;
         }
-        .info-card {
+        .page-section:nth-child(even) {
             background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            padding: 1rem;
-            margin-bottom: 2rem;
+        }
+        .section-title {
+            position: relative;
+            margin-bottom: 50px;
+            font-weight: 700;
+            font-size: 2.2rem;
+            color: #333;
             text-align: center;
         }
-        .info-card h4 {
-            margin-bottom: 0.5rem;
+        .section-title:after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            margin: 20px auto 0;
+            border-radius: 2px;
         }
-        .info-card p {
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 25px;
+            height: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .stats-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .stats-card h3 {
+            color: #e44d26;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .stats-card h3:after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            margin-top: 10px;
+            border-radius: 2px;
+        }
+        .stats-list {
+            list-style-type: none;
+            padding: 0;
             margin: 0;
-            font-size: 1rem;
-            color: #666;
         }
-        /* Featured Products Section (existing) */
-        .featured-products {
-            padding-top: 4rem;
-            padding-bottom: 4rem;
+        .stats-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
         }
+        .stats-list li:last-child {
+            border-bottom: none;
+        }
+        .stats-list .item-name {
+            font-weight: 500;
+            flex-grow: 1;
+        }
+        .stats-list .item-value {
+            font-weight: 600;
+            color: #e44d26;
+            padding-left: 10px;
+        }
+        .rating-stars {
+            color: #FFD700;
+            font-size: 0.8rem;
+        }
+        
+        /* Featured Products */
         .product-card {
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            background: white;
+            border: none;
         }
         .product-card:hover {
             transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .product-card .card-img-container {
+            height: 220px;
+            overflow: hidden;
+            position: relative;
         }
         .product-card img {
-            height: 200px;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border-top-left-radius: 15px;
-            border-top-right-radius: 15px;
+            transition: transform 0.5s ease;
+        }
+        .product-card:hover img {
+            transform: scale(1.1);
+        }
+        .product-category {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 127, 80, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .product-card .card-body {
-            padding: 1rem;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
         .card-title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
         }
-        .card-text {
-            font-size: 1.1rem;
+        .product-price {
+            color: #e44d26;
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+        .product-stock {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .stock-high {
+            color: #28a745;
+        }
+        .stock-medium {
+            color: #ffc107;
+        }
+        .stock-low {
+            color: #dc3545;
         }
         .btn-view {
-            background-color: #e44d26;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-        }
-        .btn-view:hover {
-            opacity: 0.8;
-        }
-        footer {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
-            text-align: center;
-            padding: 1rem 0;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
             margin-top: auto;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        .btn-view:hover {
+            background: linear-gradient(135deg, #ff7f50, #e44d26);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        /* Quick Stats */
+        .quick-stats {
+            background: linear-gradient(135deg, rgba(228, 77, 38, 0.9), rgba(255, 127, 80, 0.9));
+            padding: 60px 0;
+            color: white;
+            text-align: center;
+        }
+        .stat-counter {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .stat-label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #333, #222);
+            color: white;
+            padding: 40px 0 20px;
+        }
+        .footer-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .footer-title:after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            margin-top: 10px;
+        }
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        .footer-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .footer-links a:hover {
+            color: #ff7f50;
+        }
+        .social-links {
+            font-size: 1.5rem;
+            margin-top: 20px;
+        }
+        .social-links a {
+            color: white;
+            margin-right: 15px;
+            transition: color 0.3s ease;
+        }
+        .social-links a:hover {
+            color: #ff7f50;
+        }
+        .copyright {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            .hero-section p {
+                font-size: 1.2rem;
+            }
+            .section-title {
+                font-size: 1.8rem;
+            }
+            .page-section {
+                padding: 60px 0;
+            }
+            .stats-card {
+                margin-bottom: 30px;
+            }
         }
     </style>
 </head>
@@ -345,116 +592,257 @@ $stmt_featured_diff->close();
         </div>
     </section>
 
-    <!-- New Section: Top Seller of Retailer -->
-    <section class="container mt-5">
-        <div class="info-card">
-            <h4>Top Seller</h4>
-            <?php if ($top_seller): ?>
-                <p><?php echo htmlspecialchars($top_seller['name']); ?> (<?php echo $top_seller['total_orders']; ?> orders)</p>
-            <?php else: ?>
-                <p>No data available.</p>
-            <?php endif; ?>
-        </div>
-    </section>
-
-    <!-- New Section: Top Store -->
-    <section class="container mt-5">
-        <div class="info-card">
-            <h4>Top Store</h4>
-            <?php if ($top_store): ?>
-                <p><?php echo htmlspecialchars($top_store['stall_name']); ?> (<?php echo $top_store['total_orders']; ?> orders)</p>
-            <?php else: ?>
-                <p>No data available.</p>
-            <?php endif; ?>
-        </div>
-    </section>
-
-    <!-- New Section: Top Product -->
-    <section class="container mt-5">
-        <div class="info-card">
-            <h4>Top Product</h4>
-            <?php if ($top_product): ?>
-                <p><?php echo htmlspecialchars($top_product['name']); ?> (Sold: <?php echo $top_product['total_sold']; ?>)</p>
-                <img src="<?php echo htmlspecialchars($top_product['image_path']); ?>" alt="<?php echo htmlspecialchars($top_product['name']); ?>" style="max-width:200px; margin-top:10px;">
-            <?php else: ?>
-                <p>No data available.</p>
-            <?php endif; ?>
-        </div>
-    </section>
-
-    <!-- New Section: Featured Products from Different Stall -->
-    <section class="featured-products">
+    <!-- Quick Stats Section -->
+    <div class="quick-stats">
         <div class="container">
-            <h2 class="text-center mb-5">Featured Products from Different Stalls</h2>
+            <div class="row text-center">
+                <div class="col-md-3 col-6 mb-4">
+                    <i class="bi bi-shop stat-icon"></i>
+                    <div class="stat-counter"><?php echo count($top_stalls); ?>+</div>
+                    <div class="stat-label">Popular Stalls</div>
+                </div>
+                <div class="col-md-3 col-6 mb-4">
+                    <i class="bi bi-egg-fried stat-icon"></i>
+                    <div class="stat-counter"><?php echo count($featured_products); ?>+</div>
+                    <div class="stat-label">Menu Items</div>
+                </div>
+                <div class="col-md-3 col-6 mb-4">
+                    <i class="bi bi-people stat-icon"></i>
+                    <div class="stat-counter"><?php echo count($top_users); ?>+</div>
+                    <div class="stat-label">Happy Customers</div>
+                </div>
+                <div class="col-md-3 col-6 mb-4">
+                    <i class="bi bi-star stat-icon"></i>
+                    <div class="stat-counter"><?php echo count($top_feedback); ?>+</div>
+                    <div class="stat-label">5-Star Reviews</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Stats Section -->
+    <section class="page-section">
+        <div class="container">
+            <h2 class="section-title">What's Trending</h2>
             <div class="row">
-                <?php if (!empty($featured_diff_products)): ?>
-                    <?php foreach ($featured_diff_products as $product): ?>
-                        <div class="col-md-4 mb-4">
-                            <div class="card product-card">
-                                <img src="<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <h3><i class="bi bi-star me-2"></i>Top Feedback</h3>
+                        <ul class="stats-list">
+                            <?php if ($top_feedback): ?>
+                                <?php foreach ($top_feedback as $feedback): ?>
+                                    <li>
+                                        <span class="item-name"><?php echo htmlspecialchars($feedback['user_name']); ?> - <?php echo htmlspecialchars($feedback['stall_name']); ?></span>
+                                        <span class="item-value">
+                                            <span class="rating-stars">
+                                                <?php for($i = 0; $i < $feedback['rating']; $i++): ?>
+                                                    <i class="bi bi-star-fill"></i>
+                                                <?php endfor; ?>
+                                            </span>
+                                        </span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><span class="item-name">No feedback yet</span></li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <h3><i class="bi bi-shop-window me-2"></i>Top Stalls</h3>
+                        <ul class="stats-list">
+                            <?php if ($top_stalls): ?>
+                                <?php foreach ($top_stalls as $stall): ?>
+                                    <li>
+                                        <span class="item-name"><?php echo htmlspecialchars($stall['stall_name']); ?></span>
+                                        <span class="item-value"><?php echo $stall['total_orders']; ?> orders</span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><span class="item-name">No top stalls yet</span></li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <h3><i class="bi bi-egg-fried me-2"></i>Top Products</h3>
+                        <ul class="stats-list">
+                            <?php if ($top_products): ?>
+                                <?php foreach ($top_products as $product): ?>
+                                    <li>
+                                        <span class="item-name"><?php echo htmlspecialchars($product['name']); ?></span>
+                                        <span class="item-value"><?php echo $product['total_sold']; ?> sold</span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><span class="item-name">No top products yet</span></li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <h3><i class="bi bi-person-check me-2"></i>Top Users</h3>
+                        <ul class="stats-list">
+                            <?php if ($top_users): ?>
+                                <?php foreach ($top_users as $user): ?>
+                                    <li>
+                                        <span class="item-name"><?php echo htmlspecialchars($user['name']); ?></span>
+                                        <span class="item-value"><?php echo $user['total_orders']; ?> orders</span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><span class="item-name">No top users yet</span></li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <h3><i class="bi bi-star-half me-2"></i>Most Rated</h3>
+                        <ul class="stats-list">
+                            <?php if ($most_rated_products): ?>
+                                <?php foreach ($most_rated_products as $product): ?>
+                                    <li>
+                                        <span class="item-name"><?php echo htmlspecialchars($product['name']); ?></span>
+                                        <span class="item-value">
+                                            <?php echo number_format($product['avg_rating'], 1); ?>
+                                            <i class="bi bi-star-fill" style="font-size: 0.8rem; color: #FFD700;"></i>
+                                        </span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><span class="item-name">No rated products yet</span></li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <h3><i class="bi bi-award me-2"></i>Bestsellers</h3>
+                        <ul class="stats-list">
+                                <?php if ($featured_products): ?>
+    <?php for($i = 0; $i < min(3, count($featured_products)); $i++): ?>
+        <li>
+            <span class="item-name"><?php echo htmlspecialchars($featured_products[$i]['name']); ?></span>
+            <span class="item-value">$<?php echo number_format($featured_products[$i]['price'], 2); ?></span>
+        </li>
+    <?php endfor; ?>
+<?php else: ?>
+    <li><span class="item-name">No bestsellers yet</span></li>
+<?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section class="page-section">
+        <div class="container">
+            <h2 class="section-title">Featured Menu Items</h2>
+            <div class="row">
+                <?php if ($featured_products): ?>
+                    <?php foreach ($featured_products as $product): ?>
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="product-card card">
+                                <div class="card-img-container">
+                                    <img src="<?php echo !empty($product['image_path']) ? htmlspecialchars($product['image_path']) : '../assets/images/default-food.jpg'; ?>" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                                    <div class="product-category"><?php echo htmlspecialchars($product['category']); ?></div>
+                                </div>
                                 <div class="card-body">
                                     <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
-                                    <p class="card-text"><strong>Price:</strong> $<?php echo number_format($product['price'], 2); ?></p>
-                                    <p class="card-text"><strong>Category:</strong> <?php echo htmlspecialchars($product['category']); ?></p>
-                                    <a href="product_details.php?item_id=<?php echo $product['item_id']; ?>" class="btn btn-view">View Product</a>
+                                    <div class="product-price">$<?php echo number_format($product['price'], 2); ?></div>
+                                    <div class="product-stock">
+                                        <?php 
+                                        $stock = isset($product['quantity_in_stock']) ? $product['quantity_in_stock'] : 0;
+                                        if ($stock > 20) {
+                                            echo '<span class="stock-high"><i class="bi bi-check-circle-fill"></i> In Stock</span>';
+                                        } elseif ($stock > 5) {
+                                            echo '<span class="stock-medium"><i class="bi bi-exclamation-circle-fill"></i> Limited Stock</span>';
+                                        } else {
+                                            echo '<span class="stock-low"><i class="bi bi-x-circle-fill"></i> Low Stock</span>';
+                                        }
+                                        ?>
+                                    </div>
+                                    <a href="product_details.php?id=<?php echo $product['item_id']; ?>" class="btn-view">View Details</a>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="col-12 text-center">
-                        <p>No featured products available from different stalls.</p>
+                        <p>No featured products available at the moment.</p>
                     </div>
                 <?php endif; ?>
+            </div>
+            <div class="text-center mt-4">
+                <a href="food.php" class="btn btn-cta">View All Menu Items</a>
             </div>
         </div>
     </section>
 
-    <!-- Existing Section: Featured Products -->
-    <section class="featured-products">
-        <div class="container">
-            <h2 class="text-center mb-5">Featured Products</h2>
-            <div class="row">
-                <?php foreach ($featured_products as $product): ?>
-                    <div class="col-md-4 mb-4">
-                        <div class="card product-card">
-                            <img src="<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
-                            <div class="card-body">
-                                <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
-                                <p class="card-text"><strong>Price:</strong> $<?php echo number_format($product['price'], 2); ?></p>
-                                <p class="card-text"><strong>Category:</strong> <?php echo htmlspecialchars($product['category']); ?></p>
-                                <a href="product_details.php?item_id=<?php echo $product['item_id']; ?>" class="btn btn-view">View Product</a>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+    <!-- Call to Action Section -->
+    <section class="page-section quick-stats">
+        <div class="container text-center">
+            <h2 class="mb-4">Ready to Order?</h2>
+            <p class="mb-4">Skip the line and order your favorite meals directly from our platform.</p>
+            <a href="food.php" class="btn btn-cta">Start Ordering Now</a>
         </div>
     </section>
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2025 QuickByte Canteen. All rights reserved.</p>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="footer-title">QuickByte Canteen</h5>
+                    <p>Delicious food, delivered fast. Our platform connects you with the best food vendors on campus.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="bi bi-facebook"></i></a>
+                        <a href="#"><i class="bi bi-twitter"></i></a>
+                        <a href="#"><i class="bi bi-instagram"></i></a>
+                        <a href="#"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-4">
+                    <h5 class="footer-title">Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a href="index.php">Home</a></li>
+                        <li><a href="food.php">Menu</a></li>
+                        <li><a href="stalls.php">Stalls</a></li>
+                        <li><a href="cart.php">Cart</a></li>
+                        <li><a href="user_profile.php">My Account</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-6 mb-4">
+                    <h5 class="footer-title">Categories</h5>
+                    <ul class="footer-links">
+                        <li><a href="food.php?category=Breakfast">Breakfast</a></li>
+                        <li><a href="food.php?category=Lunch">Lunch</a></li>
+                        <li><a href="food.php?category=Dinner">Dinner</a></li>
+                        <li><a href="food.php?category=Snacks">Snacks</a></li>
+                        <li><a href="food.php?category=Beverages">Beverages</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 class="footer-title">Contact Us</h5>
+                    <ul class="footer-links">
+                        <li><i class="bi bi-geo-alt me-2"></i> 123 Campus Ave, University Town</li>
+                        <li><i class="bi bi-telephone me-2"></i> (123) 456-7890</li>
+                        <li><i class="bi bi-envelope me-2"></i> info@quickbytecanteen.com</li>
+                        <li><i class="bi bi-clock me-2"></i> Mon-Fri: 7am-10pm, Sat-Sun: 8am-8pm</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; <?php echo date('Y'); ?> QuickByte Canteen. All rights reserved.
+            </div>
+        </div>
     </footer>
-
-    <!-- JavaScript for Add to Cart -->
-    <script>
-        function addToCart(itemId) {
-            fetch('add_to_cart.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ item_id: itemId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Item added to cart!');
-                } else {
-                    alert(data.message || 'Failed to add item to cart.');
-                }
-            });
-        }
-    </script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

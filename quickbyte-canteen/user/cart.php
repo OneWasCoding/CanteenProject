@@ -229,8 +229,8 @@ foreach ($cartItems as $item) {
                                 <td><img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>"></td>
                                 <td><?php echo htmlspecialchars($item['name']); ?></td>
                                 <td><input type="number" class="quantity-input form-control" value="<?php echo $item['quantity']; ?>" min="1" onchange="updateQuantity(<?php echo $item['cart_id']; ?>, this.value)"></td>
-                                <td>$<?php echo number_format($item['price'], 2); ?></td>
-                                <td>$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
+                                <td>₱<?php echo number_format($item['price'], 2); ?></td>
+                                <td>₱<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
                                 <td><button class="remove-btn" onclick="removeFromCart(<?php echo $item['cart_id']; ?>)"><i class="bi bi-trash"></i></button></td>
                             </tr>
                         <?php endforeach; ?>
