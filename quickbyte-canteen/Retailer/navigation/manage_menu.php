@@ -6,6 +6,11 @@
     <title>Manage Menu</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        .fixed-textarea {
+        width: 100%; /* Full width of its container */
+        height: 150px; /* Fixed height */
+        resize: none; /* Disable resizing */
+    }
         .main-content {
             padding: 20px;
             background-color: #f8f9fa;
@@ -56,7 +61,7 @@
             max-height: 100px;
             border-radius: 0.5rem;
         }
-    </style>
+    </style>    
 </head>
 <body>
     <?php 
@@ -76,18 +81,19 @@
     // Handle Add Item
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_item'])) {
         $name = $_POST['name'];
+        $description = $_POST['description'];
         $price = $_POST['price'];
         $availability = $_POST['availability'];
         $quantity = $_POST['quantity'];
-        $expiration = $_POST['expiration_day'];
+        $expiration_day = $_POST['expiration_day'];
         $image_path = ''; // Initialize image path
-    
+
         // Handle image upload
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
             $target_dir = "../../images/";
             $target_file = $target_dir . basename($_FILES['image']['name']);
             $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-    
+
             // Check if the file is an image
             $check = getimagesize($_FILES['image']['tmp_name']);
             if ($check !== false) {
@@ -97,22 +103,22 @@
                 }
             }
         }
-    
+
         // Insert into menu_items
-        $add_sql = "INSERT INTO menu_items (stall_id, name, price, availability, image_path) VALUES (?, ?, ?, ?, ?)";
+        $add_sql = "INSERT INTO menu_items (stall_id, name, description, price, availability, image_path) VALUES (?, ?, ?, ?, ?, ?)";
         $add_stmt = $con->prepare($add_sql);
-        $add_stmt->bind_param("isdss", $stall_id, $name, $price, $availability, $image_path);
+        $add_stmt->bind_param("isssds", $stall_id, $name, $description, $price, $availability, $image_path);
         $add_stmt->execute();
         $item_id = $con->insert_id; // Get the last inserted item_id
         $add_stmt->close();
-    
+
         // Insert into food_storage with stall_id
         $storage_sql = "INSERT INTO food_storage (item_id, stall_id, quantity, expiration_day) VALUES (?, ?, ?, ?)";
         $storage_stmt = $con->prepare($storage_sql);
-        $storage_stmt->bind_param("iiis", $item_id, $stall_id, $quantity, $expiration);
+        $storage_stmt->bind_param("iiis", $item_id, $stall_id, $quantity, $expiration_day);
         $storage_stmt->execute();
         $storage_stmt->close();
-    
+
         header("Location: manage_menu.php");
         exit();
     }
@@ -121,21 +127,22 @@
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_item'])) {
         $id = $_POST['item_id'];
         $name = $_POST['name'];
+        $description = $_POST['description'];
         $price = $_POST['price'];
         $availability = $_POST['availability'];
         $quantity = $_POST['quantity'];
-        $expiration = $_POST['expiration_'];
+        $expiration_day = $_POST['expiration_day'];
         $current_image = $_POST['current_image']; // Current image path from the hidden input
-    
+
         // Initialize image_path with the current image
         $image_path = $current_image;
-    
+
         // Handle image upload if a new image is provided
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
             $target_dir = "../../images/";
             $target_file = $target_dir . basename($_FILES['image']['name']);
             $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-    
+
             // Check if the file is an image
             $check = getimagesize($_FILES['image']['tmp_name']);
             if ($check !== false) {
@@ -145,50 +152,50 @@
                 }
             }
         }
-    
+
         // Update menu_items
-        $edit_sql = "UPDATE menu_items SET name = ?, price = ?, availability = ?, image_path = ? WHERE item_id = ? AND stall_id = ?";
+        $edit_sql = "UPDATE menu_items SET name = ?, description = ?, price = ?, availability = ?, image_path = ? WHERE item_id = ? AND stall_id = ?";
         $edit_stmt = $con->prepare($edit_sql);
-        $edit_stmt->bind_param("sdssii", $name, $price, $availability, $image_path, $id, $stall_id);
+        $edit_stmt->bind_param("ssdssii", $name, $description, $price, $availability, $image_path, $id, $stall_id);
         $edit_stmt->execute();
         $edit_stmt->close();
-    
+
         // Update food_storage
         $storage_sql = "UPDATE food_storage SET quantity = ?, expiration_day = ? WHERE item_id = ?";
         $storage_stmt = $con->prepare($storage_sql);
-        $storage_stmt->bind_param("isi", $quantity, $expiration, $id);
+        $storage_stmt->bind_param("isi", $quantity, $expiration_day, $id);
         $storage_stmt->execute();
         $storage_stmt->close();
-    
+
         header("Location: manage_menu.php");
         exit();
     }
 
     // Handle Delete Item
-if (isset($_GET['delete_id'])) {
-    $id = $_GET['delete_id'];
+    if (isset($_GET['delete_id'])) {
+        $id = $_GET['delete_id'];
 
-    // Delete from food_storage first
-    $delete_storage_sql = "DELETE FROM food_storage WHERE item_id = ?";
-    $delete_storage_stmt = $con->prepare($delete_storage_sql);
-    $delete_storage_stmt->bind_param("i", $id);
-    $delete_storage_stmt->execute();
-    $delete_storage_stmt->close();
+        // Delete from food_storage first
+        $delete_storage_sql = "DELETE FROM food_storage WHERE item_id = ?";
+        $delete_storage_stmt = $con->prepare($delete_storage_sql);
+        $delete_storage_stmt->bind_param("i", $id);
+        $delete_storage_stmt->execute();
+        $delete_storage_stmt->close();
 
-    // Delete from menu_items
-    $delete_menu_sql = "DELETE FROM menu_items WHERE item_id = ? AND stall_id = ?";
-    $delete_menu_stmt = $con->prepare($delete_menu_sql);
-    $delete_menu_stmt->bind_param("ii", $id, $stall_id);
-    $delete_menu_stmt->execute();
-    $delete_menu_stmt->close();
+        // Delete from menu_items
+        $delete_menu_sql = "DELETE FROM menu_items WHERE item_id = ? AND stall_id = ?";
+        $delete_menu_stmt = $con->prepare($delete_menu_sql);
+        $delete_menu_stmt->bind_param("ii", $id, $stall_id);
+        $delete_menu_stmt->execute();
+        $delete_menu_stmt->close();
 
-    header("Location: manage_menu.php");
-    exit();
-}
+        header("Location: manage_menu.php");
+        exit();
+    }
 
-    // Fetch menu items with quantity, expiration, and image_path
+    // Fetch menu items with quantity, expiration_day, and image_path
     $menu_sql = "
-        SELECT mi.item_id, mi.name, mi.price, mi.availability, mi.image_path, fs.quantity, fs.expiration_day 
+        SELECT mi.item_id, mi.name, mi.description, mi.price, mi.availability, mi.image_path, fs.quantity, fs.expiration_day 
         FROM menu_items mi
         LEFT JOIN food_storage fs ON mi.item_id = fs.item_id
         WHERE mi.stall_id = ?
@@ -222,6 +229,7 @@ if (isset($_GET['delete_id'])) {
                                 <tr>
                                     <th>Image</th>
                                     <th>Item Name</th>
+                                    <th>Description</th>
                                     <th>Price</th>
                                     <th>Availability</th>
                                     <th>Quantity</th>
@@ -240,6 +248,7 @@ if (isset($_GET['delete_id'])) {
                                             <?php endif; ?>
                                         </td>
                                         <td><?php echo htmlspecialchars($item['name'], ENT_QUOTES); ?></td>
+                                        <td><?php echo htmlspecialchars($item['description'], ENT_QUOTES); ?></td>
                                         <td>PHP <?php echo number_format($item['price'], 2); ?></td>
                                         <td>
                                             <span class="status-badge <?php echo ($item['availability'] === 'Available') ? 'status-available' : 'status-out-of-stock'; ?>">
@@ -251,6 +260,7 @@ if (isset($_GET['delete_id'])) {
                                         <td class="action-links">
                                             <button onclick="editItem('<?php echo $item['item_id']; ?>', 
                                                       '<?php echo htmlspecialchars($item['name'], ENT_QUOTES); ?>', 
+                                                      '<?php echo htmlspecialchars($item['description'], ENT_QUOTES); ?>', 
                                                       '<?php echo $item['price']; ?>', 
                                                       '<?php echo $item['availability']; ?>', 
                                                       '<?php echo $item['quantity']; ?>', 
@@ -274,36 +284,61 @@ if (isset($_GET['delete_id'])) {
             </div>
 
             <div class="card">
-                <div class="card-body">
-                    <h3 class="h5 card-title mb-4">Add New Item</h3>
-                    <form method="POST" enctype="multipart/form-data" class="row g-3">
-                        <div class="col-md-3">
-                            <input type="text" name="name" class="form-control" placeholder="Item Name" required>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" name="price" class="form-control" placeholder="Price" step="0.01" required>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="availability" class="form-select">
-                                <option value="Available">Available</option>
-                                <option value="Out Of Stock">Out Of Stock</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" name="quantity" class="form-control" placeholder="Quantity" required>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="date" name="expiration_day" class="form-control" placeholder="Expiration" required>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="file" name="image" class="form-control" accept="image/*">
-                        </div>
-                        <div class="col-md-1">
-                            <button type="submit" name="add_item" class="btn btn-success w-100">Add</button>
-                        </div>
-                    </form>
+    <div class="card-body">
+        <h3 class="h5 card-title mb-4">Add New Item</h3>
+        <form method="POST" enctype="multipart/form-data">
+            <!-- Row 1: Item Name and Description -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">Item Name</label>
+                    <input type="text" name="name" id="name" class="form-control" placeholder="Enter item name" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea name="description" id="description" class="form-control fixed-textarea" placeholder="Enter item description" rows="5" required></textarea>
                 </div>
             </div>
+
+            <!-- Row 2: Price, Availability, and Quantity -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="price" class="form-label">Price</label>
+                    <input type="number" name="price" id="price" class="form-control" placeholder="Enter price" step="0.01" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="availability" class="form-label">Availability</label>
+                    <select name="availability" id="availability" class="form-select" required>
+                        <option value="Available">Available</option>
+                        <option value="Out Of Stock">Out Of Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="quantity" class="form-label">Quantity</label>
+                    <input type="number" name="quantity" id="quantity" class="form-control" placeholder="Enter quantity" required>
+                </div>
+            </div>
+
+            <!-- Row 3: Expiration Date and Image Upload -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="expiration_day" class="form-label">Expiration Date</label>
+                    <input type="date" name="expiration_day" id="expiration_day" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="image" class="form-label">Item Image</label>
+                    <input type="file" name="image" id="image" class="form-control" accept="image/*">
+                </div>
+            </div>
+
+            <!-- Row 4: Submit Button -->
+            <div class="row">
+                <div class="col-md-12">
+                    <button type="submit" name="add_item" class="btn btn-success w-100">Add Item</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
         </div>
 
         <!-- Bootstrap Modal -->
@@ -322,6 +357,10 @@ if (isset($_GET['delete_id'])) {
                                 <input type="text" name="name" id="edit_name" class="form-control" required>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" id="edit_description" class="form-control" required></textarea>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Price</label>
                                 <input type="number" name="price" id="edit_price" step="0.01" class="form-control" required>
                             </div>
@@ -338,7 +377,7 @@ if (isset($_GET['delete_id'])) {
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Expiration</label>
-                                <input type="date" name="expiration" id="edit_expiration" class="form-control" required>
+                                <input type="date" name="expiration_day" id="edit_expiration_day" class="form-control" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Image</label>
@@ -361,13 +400,14 @@ if (isset($_GET['delete_id'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function editItem(id, name, price, availability, quantity, expiration, image_path) {
+        function editItem(id, name, description, price, availability, quantity, expiration_day, image_path) {
             document.getElementById('edit_item_id').value = id;
             document.getElementById('edit_name').value = name;
+            document.getElementById('edit_description').value = description;
             document.getElementById('edit_price').value = price;
             document.getElementById('edit_availability').value = availability;
             document.getElementById('edit_quantity').value = quantity;
-            document.getElementById('edit_expiration').value = expiration;
+            document.getElementById('edit_expiration_day').value = expiration_day;
             document.getElementById('edit_current_image').value = image_path;
 
             const editModal = new bootstrap.Modal(document.getElementById('editModal'));

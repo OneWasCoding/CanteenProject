@@ -184,7 +184,7 @@ $stall_landing_page = "../stalls/stall_{$_SESSION['stall_id']}.php";
                 <span>View Orders</span>
             </a>
 
-            <a href="#" class="option">
+            <a href="../navigation/inventory.php" class="option">
                 <i class="fa-solid fa-warehouse"></i> <!-- Icon for Inventory -->
                 <span>Inventory</span>
             </a>
