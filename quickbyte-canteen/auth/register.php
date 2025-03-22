@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $user_id = $con->insert_id; // Get the newly inserted user ID
 
                 // If the user is a retailer, store additional data in the retailers table
-                if ($role === "Retailer") {
+                if ($role === "Retailer" && $stall_id !== "new_stall") {
                     $retailer_sql = "INSERT INTO retailers (user_id, stall_id) VALUES (?, ?)";
                     $retailer_stmt = $con->prepare($retailer_sql);
                     $retailer_stmt->bind_param("ii", $user_id, $stall_id);
@@ -170,7 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             scrollbar-color: #e44d26 #f1f1f1;
         }
     </style>
-    <script>
+     <script>
         function checkRole() {
             let roleField = document.getElementById("role");
             let stallField = document.getElementById("stall-select");
@@ -184,6 +184,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <i class="fas fa-store"></i>
                             <select class="form-select" id="stall_id" name="stall_id" required>
                                 <option value="">Select Stall</option>
+                                <option value="new_stall">New Stall</option>
                                 <?php
                                 $stallSql = "SELECT stall_id, stall_name FROM stalls";
                                 $stallStmt = $con->prepare($stallSql);
@@ -204,6 +205,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
         }
+
+        document.getElementById("register-form").addEventListener("submit", function(event) {
+            let stallSelect = document.getElementById("stall_id");
+            if (stallSelect && stallSelect.value === "new_stall") {
+                event.preventDefault(); // Prevent form submission
+                window.location.href = "stall_application.php"; // Redirect to stall application page
+            }
+        });
     </script>
 </head>
 <body>

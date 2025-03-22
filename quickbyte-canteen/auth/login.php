@@ -1,7 +1,5 @@
-<?php
+<<?php
 session_start();
-
-// Include database connection
 include '../config.php';
 
 // Check if config.php is working and the database connection is established
@@ -35,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Redirect based on user role
             switch ($user['role']) {
                 case 'Admin':
-                    header("Location: ../admin/dashboard.php");
+                    header("Location: ../admin/admin_dashboard.php");
                     exit();
 
                 case 'Retailer':
@@ -53,7 +51,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         header("Location: ../retailer/stalls/stall_{$retailer['stall_id']}.php");
                         exit();
                     } else {
-                        $error = "Retailer account is not assigned to a stall!";
+                        // If no stall is assigned, redirect to stall registration
+                        header("Location: ../Retailer/stall_application.php");
+                        exit();
                     }
                     break;
 
@@ -73,7 +73,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $pageTitle = "QuickByte Canteen - Login";
 include '../includes/header.php';
 ?>
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 
 <style>
