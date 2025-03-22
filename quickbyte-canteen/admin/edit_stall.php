@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Process file upload if a new image is provided
     if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
-        $target_dir = "../uploads/stalls/";
+        $target_dir = "../images/stalls/";
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $check = getimagesize($_FILES['image']['tmp_name']);
         if ($check !== false) {
             if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
-                $image_path = "uploads/stalls/" . $filename;
+                $image_path = "../images/stalls/" . $filename;
             } else {
                 $error = "Error uploading new image.";
             }

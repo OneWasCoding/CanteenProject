@@ -93,7 +93,6 @@
             $target_dir = "../../images/";
             $target_file = $target_dir . basename($_FILES['image']['name']);
             $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
             // Check if the file is an image
             $check = getimagesize($_FILES['image']['tmp_name']);
             if ($check !== false) {
@@ -142,7 +141,6 @@
             $target_dir = "../../images/";
             $target_file = $target_dir . basename($_FILES['image']['name']);
             $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
             // Check if the file is an image
             $check = getimagesize($_FILES['image']['tmp_name']);
             if ($check !== false) {

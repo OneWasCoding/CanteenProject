@@ -19,6 +19,10 @@
         <a class="nav-link text-white" href="manage_stalls.php">
           <i class="bi bi-shop"></i> Manage Stalls
         </a>
+        <li class="nav-item">
+        <a class="nav-link text-white" href="stall_approval.php">
+          <i class="bi bi-shop"></i> Stall Application
+        </a>
       </li>
       <li class="nav-item">
         <a class="nav-link text-white" href="manage_products.php">
