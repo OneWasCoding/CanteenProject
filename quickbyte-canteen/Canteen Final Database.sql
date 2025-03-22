@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 22, 2025 at 04:02 PM
+-- Generation Time: Mar 22, 2025 at 07:31 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -33,6 +33,13 @@ CREATE TABLE `cart` (
   `item_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cart`
+--
+
+INSERT INTO `cart` (`cart_id`, `user_id`, `item_id`, `quantity`) VALUES
+(54, 18, 12, 1);
 
 -- --------------------------------------------------------
 
@@ -68,8 +75,8 @@ CREATE TABLE `food_storage` (
 --
 
 INSERT INTO `food_storage` (`storage_id`, `stall_id`, `item_id`, `quantity`, `expiration_day`) VALUES
-(3, 9, 12, 12, '2025-03-25'),
-(4, 9, 13, 20, '2025-03-28'),
+(3, 9, 12, 9, '2025-03-25'),
+(4, 9, 13, 19, '2025-03-28'),
 (5, 8, 14, 12, '2025-03-27');
 
 -- --------------------------------------------------------
@@ -91,7 +98,8 @@ CREATE TABLE `gcash_payment_details` (
 
 INSERT INTO `gcash_payment_details` (`id`, `order_id`, `gcash_reference`, `gcash_image_path`) VALUES
 (1, 'ORDER_67dd2f93ab76a', '11231231', 'images/gcash/67dd2f93a76dc_476974947_598964489616296_4802757199467559226_n.png'),
-(2, 'ORDER_67dd31cfe0570', '23232', 'images/gcash/67dd31cfde1ac_476974947_598964489616296_4802757199467559226_n.png');
+(2, 'ORDER_67dd31cfe0570', '23232', 'images/gcash/67dd31cfde1ac_476974947_598964489616296_4802757199467559226_n.png'),
+(3, 'ORDER_67deffba23cf2', '123', 'images/gcash/67deffba23848_HEALTHY FOODS.png');
 
 -- --------------------------------------------------------
 
@@ -158,6 +166,20 @@ CREATE TABLE `orders` (
   `order_status` enum('Pending','Completed','Cancelled','Ready for Pickup','Partially Completed','Preparing') DEFAULT 'Pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_date`, `order_status`) VALUES
+('ORDER_67def7a866631', 18, 9, 790.00, '2025-03-22 17:47:20', 'Completed'),
+('ORDER_67deface757f9', 18, 9, 150.00, '2025-03-22 18:00:46', 'Pending'),
+('ORDER_67defb26c2df9', 18, 9, 150.00, '2025-03-22 18:02:14', 'Pending'),
+('ORDER_67defb931a93c', 18, 9, 150.00, '2025-03-22 18:04:03', 'Pending'),
+('ORDER_67defe339ea67', 7, 9, 150.00, '2025-03-22 18:15:15', 'Completed'),
+('ORDER_67deff9e19fd7', 7, 9, 150.00, '2025-03-22 18:21:18', 'Completed'),
+('ORDER_67deffba23cf2', 7, 9, 40.00, '2025-03-22 18:21:46', 'Completed'),
+('ORDER_67df0113aac9e', 7, 9, 150.00, '2025-03-22 18:27:31', 'Completed');
+
 -- --------------------------------------------------------
 
 --
@@ -173,6 +195,46 @@ CREATE TABLE `order_details` (
   `unit_price` decimal(10,2) NOT NULL,
   `status` enum('Preparing','Ready','Cancelled','') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `order_details`
+--
+
+INSERT INTO `order_details` (`order_detail_id`, `order_id`, `item_id`, `quantity`, `subtotal`, `unit_price`, `status`) VALUES
+(20, 'ORDER_67def7a866631', 12, 5, 750.00, 150.00, 'Preparing'),
+(21, 'ORDER_67def7a866631', 13, 1, 40.00, 40.00, 'Preparing'),
+(22, 'ORDER_67deface757f9', 12, 1, 150.00, 150.00, 'Preparing'),
+(23, 'ORDER_67defb26c2df9', 12, 1, 150.00, 150.00, 'Preparing'),
+(24, 'ORDER_67defb931a93c', 12, 1, 150.00, 150.00, 'Preparing'),
+(26, 'ORDER_67defe339ea67', 12, 1, 150.00, 150.00, 'Preparing'),
+(30, 'ORDER_67deff9e19fd7', 12, 1, 150.00, 150.00, 'Preparing'),
+(31, 'ORDER_67deffba23cf2', 13, 1, 40.00, 40.00, 'Preparing'),
+(32, 'ORDER_67df0113aac9e', 12, 1, 150.00, 150.00, 'Preparing');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payments`
+--
+
+CREATE TABLE `payments` (
+  `payment_id` int(11) NOT NULL,
+  `order_id` varchar(50) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` enum('pending','completed','failed') DEFAULT 'pending',
+  `payment_date` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`payment_id`, `order_id`, `user_id`, `amount`, `status`, `payment_date`) VALUES
+(1, 'ORDER_67defe339ea67', 7, 150.00, 'pending', '2025-03-22 18:15:15'),
+(2, 'ORDER_67deff9e19fd7', 7, 150.00, '', '2025-03-22 18:21:18'),
+(3, 'ORDER_67deffba23cf2', 7, 40.00, '', '2025-03-22 18:21:46'),
+(4, 'ORDER_67df0113aac9e', 7, 150.00, '', '2025-03-22 18:27:31');
 
 -- --------------------------------------------------------
 
@@ -221,7 +283,12 @@ INSERT INTO `receipts` (`receipt_id`, `order_id`, `user_id`, `receipt_date`, `to
 (4, 'ORDER_67dd2f93ab76a', 17, '2025-03-21 09:21:23', 1.00, 'gcash'),
 (5, 'ORDER_67dd31cfe0570', 7, '2025-03-21 09:30:55', 8.00, 'gcash'),
 (6, 'ORDER_67dd6f8b7bdf6', 6, '2025-03-21 13:54:19', 1.00, 'in-store'),
-(7, 'ORDER_67dd71a325fca', 14, '2025-03-21 14:03:15', 1.00, 'in-store');
+(7, 'ORDER_67dd71a325fca', 14, '2025-03-21 14:03:15', 1.00, 'in-store'),
+(8, 'ORDER_67def7a866631', 18, '2025-03-22 17:47:20', 790.00, 'in-store'),
+(9, 'ORDER_67defe339ea67', 7, '2025-03-22 18:15:15', 150.00, 'in-store'),
+(10, 'ORDER_67deff9e19fd7', 7, '2025-03-22 18:21:18', 150.00, 'in-store'),
+(11, 'ORDER_67deffba23cf2', 7, '2025-03-22 18:21:46', 40.00, 'gcash'),
+(12, 'ORDER_67df0113aac9e', 7, '2025-03-22 18:27:31', 150.00, 'in-store');
 
 -- --------------------------------------------------------
 
@@ -345,7 +412,8 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `role`, `balance`, 
 (14, 'bor', 'borjabisaya@gmail.com', '$2y$10$CSxsLT/j4yOHoyTD8vBuKO0QvYbOhPVPq90aIHs6jHiLIQ4b8aeMK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (15, 'Melvs', 'w@gmail.com', '$2y$10$OdI59Cgo1bxHCpANUlNYBOgjZ/EpR40uSaQNXmGfPX.IMSnT0RZBK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (16, 'Allan', 'allanmonforte1@gmail.com', '$2y$10$KV6xmya9.Vfw1pcUd0xnZ.6RMmrN76krd/6PUZX48uH.fF.pbSsnS', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
-(17, 'melvs', 'catueramelvin08@gmail.com', '$2y$10$OPA6FtH6PQS/fEETzyFoh.Lkh6cHbau8bN858BgfssD0ya2wXPpjy', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg');
+(17, 'melvs', 'catueramelvin08@gmail.com', '$2y$10$OPA6FtH6PQS/fEETzyFoh.Lkh6cHbau8bN858BgfssD0ya2wXPpjy', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+(18, 'melvinbisaya', 'melvin@bisaya.com', '$2y$10$WGTqlMj0yq0MBZWbh.7sWuOaRm1QSZSKSwCk78X9FMRO0M.dTBhgW', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg');
 
 --
 -- Indexes for dumped tables
@@ -414,6 +482,13 @@ ALTER TABLE `order_details`
   ADD KEY `fk_orderdetails_menuitems` (`item_id`);
 
 --
+-- Indexes for table `payments`
+--
+ALTER TABLE `payments`
+  ADD PRIMARY KEY (`payment_id`),
+  ADD KEY `order_id` (`order_id`);
+
+--
 -- Indexes for table `products`
 --
 ALTER TABLE `products`
@@ -464,7 +539,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT for table `feedback`
@@ -482,7 +557,7 @@ ALTER TABLE `food_storage`
 -- AUTO_INCREMENT for table `gcash_payment_details`
 --
 ALTER TABLE `gcash_payment_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `inventory`
@@ -500,7 +575,13 @@ ALTER TABLE `menu_items`
 -- AUTO_INCREMENT for table `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `order_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `order_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT for table `payments`
+--
+ALTER TABLE `payments`
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `products`
@@ -512,7 +593,7 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT for table `receipts`
 --
 ALTER TABLE `receipts`
-  MODIFY `receipt_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `receipt_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `retailers`
@@ -536,7 +617,7 @@ ALTER TABLE `stall_application`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- Constraints for dumped tables
