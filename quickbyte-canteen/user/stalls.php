@@ -33,108 +33,175 @@ $stmt->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stalls - QuickByte Canteen</title>
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
             font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            padding-top: 60px;
         }
+
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px 0;
         }
+
         .navbar-brand {
             font-weight: bold;
+            font-size: 1.5rem;
+            color: white !important;
         }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: white !important;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
         .dropdown-menu {
             background-color: #fff;
             border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
         .dropdown-item {
-            color: #333;
+            padding: 8px 20px;
             transition: all 0.3s ease;
         }
+
         .dropdown-item:hover {
-            background-color: #e44d26;
-            color: white;
-        }
-        .stall-card {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            padding: 1rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .stall-card:hover {
-            transform: translateY(-5px);
-        }
-        .stall-card img {
-            max-height: 150px;
-            object-fit: cover;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            width: 100%;
-        }
-        .stall-card .card-body {
-            flex-grow: 1;
-            padding: 0;
-            margin-top: 1rem;
-        }
-        .stall-card .card-body h5 {
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .stall-card .card-body p {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 1rem;
-        }
-        .btn-view-menu {
-            background-color: #e44d26;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-            width: 100%;
-            margin-top: auto;
-        }
-        .btn-view-menu:hover {
-            opacity: 0.8;
-        }
-        footer {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
-            text-align: center;
-            padding: 1rem 0;
-            margin-top: auto;
+            transform: translateX(5px);
         }
+
         .hero-section {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
             text-align: center;
-            padding: 2rem 0;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
         }
+
         .hero-section h2 {
             font-size: 2.5rem;
-            font-weight: bold;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .stall-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 1200px;
+        }
+
+        .stall-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .stall-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 25px rgba(228,77,38,0.2);
+        }
+
+        .stall-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .stall-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .stall-card h5 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.75rem;
+        }
+
+        .stall-card p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-view-menu {
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            border: none;
+        }
+
+        .btn-view-menu:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(228,77,38,0.3);
+            color: white;
+        }
+
+        footer {
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            color: white;
+            text-align: center;
+            padding: 1.5rem 0;
+            margin-top: auto;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 0;
+            }
+            
+            .hero-section h2 {
+                font-size: 2rem;
+            }
+
+            .stall-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .stall-card {
+                margin-bottom: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar (same as your reviews page) -->
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php"><i class="bi bi-shop"></i> QuickByte Canteen</a>
@@ -145,13 +212,13 @@ $stmt->close();
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
                            data-bs-toggle="dropdown" aria-expanded="false">
                             Home
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="food.php">Food Items</a></li>
-                            <li><a class="dropdown-item" href="stalls.php">Stalls</a></li>
+                            <li><a class="dropdown-item" href="food.php"><i class="bi bi-egg-fried"></i> Food Items</a></li>
+                            <li><a class="dropdown-item" href="stalls.php"><i class="bi bi-shop-window"></i> Stalls</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
@@ -175,41 +242,57 @@ $stmt->close();
     <section class="hero-section">
         <div class="container">
             <h2>Discover Our Stalls</h2>
+            <p class="lead">Explore a variety of delicious options from our food stalls</p>
         </div>
     </section>
 
     <!-- Stalls Section -->
-    <section class="container mt-4">
-        <div class="row">
-            <?php if (!empty($stalls)): ?>
-                <?php foreach ($stalls as $stall): ?>
-                    <div class="col-md-4 mb-4">
-                        <div class="stall-card">
-                            <img src="<?php echo htmlspecialchars($stall['image_path']); ?>" alt="<?php echo htmlspecialchars($stall['stall_name']); ?>">
-                            <div class="card-body">
-                                <h5><?php echo htmlspecialchars($stall['stall_name']); ?></h5>
-                                <p><?php echo htmlspecialchars($stall['description'] ?? 'No description available.'); ?></p>
-                                <a href="food_items.php?stall_id=<?php echo $stall['stall_id']; ?>" class="btn-view-menu">
-                                    <i class="bi bi-utensils"></i> View Menu
-                                </a>
+    <div class="container">
+        <div class="stall-container">
+            <div class="row">
+                <?php if (!empty($stalls)): ?>
+                    <?php foreach ($stalls as $stall): ?>
+                        <div class="col-md-4 mb-4">
+                            <div class="stall-card">
+                                <img src="<?php echo htmlspecialchars($stall['image_path']); ?>" 
+                                     alt="<?php echo htmlspecialchars($stall['stall_name']); ?>">
+                                <div class="card-body">
+                                    <h5><?php echo htmlspecialchars($stall['stall_name']); ?></h5>
+                                    <p><?php echo htmlspecialchars($stall['description'] ?? 'No description available.'); ?></p>
+                                    <a href="food_items.php?stall_id=<?php echo $stall['stall_id']; ?>" class="btn-view-menu">
+                                        <i class="bi bi-utensils"></i> View Menu
+                                    </a>
+                                </div>
                             </div>
                         </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12 text-center">
+                        <p>No stalls available at the moment.</p>
                     </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="col-12 text-center">
-                    <p>No stalls available.</p>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
-    </section>
+    </div>
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2025 QuickByte Canteen. All rights reserved.</p>
+        <div class="container">
+            <h5>Contact Us</h5>
+            <p>
+                Email: <a href="mailto:support@quickbyte.com">support@quickbyte.com</a><br>
+                Phone: <a href="tel:+1234567890">+123 456 7890</a>
+            </p>
+            <p>Follow us on social media:</p>
+            <div class="social-icons">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+                <a href="#"><i class="bi bi-twitter"></i></a>
+            </div>
+            <p>&copy; 2024 QuickByte Canteen. All rights reserved.</p>
+        </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -44,7 +44,6 @@ $result = $stmt->get_result();
 $menuItems = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -129,6 +128,7 @@ $stmt->close();
             cursor: pointer;
             transition: all 0.3s ease;
             margin-top: 10px;
+            text-decoration: none;
         }
         .btn-view-product:hover {
             background-color: #333;
@@ -174,9 +174,13 @@ $stmt->close();
         <!-- Menu Items -->
         <div class="row">
             <?php foreach ($menuItems as $item): ?>
+                <?php 
+                // Process the image path similarly to food.php
+                $image_path = str_replace("../../", "../", $item['image_path']);
+                ?>
                 <div class="col-md-4">
                     <div class="menu-item <?php echo $item['quantity_in_stock'] <= 0 ? 'sold-out' : ''; ?>">
-                        <img src="images/food/<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                        <img src="<?php echo htmlspecialchars($image_path); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
                         <h4><?php echo htmlspecialchars($item['name']); ?></h4>
                         <p><strong>Price:</strong> $<?php echo number_format($item['price'], 2); ?></p>
                         <p><strong>Category:</strong> <?php echo htmlspecialchars($item['category']); ?></p>

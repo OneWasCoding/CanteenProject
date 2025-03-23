@@ -97,18 +97,28 @@ $stmt_most_rated_products->close();
 
 // Featured Products
 $sql_featured_products = "
-    SELECT m.item_id, m.name, m.price, m.category, m.image_path, fs.quantity AS quantity_in_stock
-    FROM menu_items m
-    LEFT JOIN food_storage fs ON m.item_id = fs.item_id
-    WHERE m.availability = 'Available'
-    ORDER BY RAND() LIMIT 6
+    SELECT 
+        m.item_id, 
+        m.name, 
+        m.price, 
+        m.category, 
+        m.image_path, 
+        COALESCE(fs.quantity, 0) AS quantity_in_stock
+    FROM 
+        menu_items m
+    LEFT JOIN 
+        food_storage fs ON m.item_id = fs.item_id
+    WHERE 
+        m.availability = 'Available'
+    ORDER BY 
+        RAND() 
+    LIMIT 6
 ";
 $stmt_featured_products = $con->prepare($sql_featured_products);
 $stmt_featured_products->execute();
 $result_featured_products = $stmt_featured_products->get_result();
 $featured_products = $result_featured_products->fetch_all(MYSQLI_ASSOC);
 $stmt_featured_products->close();
-
 ?>
 
 <!DOCTYPE html>
@@ -510,6 +520,30 @@ $stmt_featured_products->close();
             .stats-card {
                 margin-bottom: 30px;
             }
+            /* Add this to your existing CSS */
+.btn-view {
+    background: linear-gradient(135deg, #e44d26, #ff7f50);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-top: auto;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+}
+
+.btn-view:hover {
+    background: linear-gradient(135deg, #ff7f50, #e44d26);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+    text-decoration: none;
+}
         }
     </style>
 </head>
@@ -740,50 +774,64 @@ $stmt_featured_products->close();
         </div>
     </section>
 
-    <!-- Featured Products Section -->
-    <section class="page-section">
-        <div class="container">
-            <h2 class="section-title">Featured Menu Items</h2>
-            <div class="row">
-                <?php if ($featured_products): ?>
-                    <?php foreach ($featured_products as $product): ?>
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="product-card card">
-                                <div class="card-img-container">
-                                    <img src="<?php echo !empty($product['image_path']) ? htmlspecialchars($product['image_path']) : '../assets/images/default-food.jpg'; ?>" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
-                                    <div class="product-category"><?php echo htmlspecialchars($product['category']); ?></div>
-                                </div>
-                                <div class="card-body">
-                                    <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
-                                    <div class="product-price">$<?php echo number_format($product['price'], 2); ?></div>
-                                    <div class="product-stock">
-                                        <?php 
-                                        $stock = isset($product['quantity_in_stock']) ? $product['quantity_in_stock'] : 0;
-                                        if ($stock > 20) {
-                                            echo '<span class="stock-high"><i class="bi bi-check-circle-fill"></i> In Stock</span>';
-                                        } elseif ($stock > 5) {
-                                            echo '<span class="stock-medium"><i class="bi bi-exclamation-circle-fill"></i> Limited Stock</span>';
-                                        } else {
-                                            echo '<span class="stock-low"><i class="bi bi-x-circle-fill"></i> Low Stock</span>';
-                                        }
-                                        ?>
-                                    </div>
-                                    <a href="product_details.php?id=<?php echo $product['item_id']; ?>" class="btn-view">View Details</a>
+<!-- Featured Products Section -->
+<section class="page-section">
+    <div class="container">
+        <h2 class="section-title">Featured Menu Items</h2>
+        <div class="row">
+            <?php if ($featured_products): ?>
+                <?php foreach ($featured_products as $product): ?>
+                    <?php
+                    // Process the image_path for the current product with path adjustment
+                    $image_path = !empty($product['image_path']) 
+                        ? htmlspecialchars(str_replace("../../", "../", $product['image_path'])) 
+                        : '../assets/images/default-food.jpg';
+                    ?>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="product-card card">
+                            <div class="card-img-container">
+                                <img src="<?php echo $image_path; ?>" 
+                                     class="card-img-top" 
+                                     alt="<?php echo htmlspecialchars($product['name']); ?>">
+                                <div class="product-category">
+                                    <?php echo htmlspecialchars($product['category']); ?>
                                 </div>
                             </div>
+                            <div class="card-body">
+                                <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
+                                <div class="product-price">$<?php echo number_format($product['price'], 2); ?></div>
+                                <div class="product-stock">
+                                    <?php 
+                                    $stock = isset($product['quantity_in_stock']) ? $product['quantity_in_stock'] : 0;
+                                    if ($stock > 20) {
+                                        echo '<span class="stock-high"><i class="bi bi-check-circle-fill"></i> In Stock</span>';
+                                    } elseif ($stock > 5) {
+                                        echo '<span class="stock-medium"><i class="bi bi-exclamation-circle-fill"></i> Limited Stock</span>';
+                                    } else {
+                                        echo '<span class="stock-low"><i class="bi bi-x-circle-fill"></i> Low Stock</span>';
+                                    }
+                                    ?>
+                                </div>
+                                <a href="product_details.php?item_id=<?php echo $product['item_id']; ?>" 
+                                   class="btn-view">
+                                    View Details
+                                </a>
+                            </div>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="col-12 text-center">
-                        <p>No featured products available at the moment.</p>
                     </div>
-                <?php endif; ?>
-            </div>
-            <div class="text-center mt-4">
-                <a href="food.php" class="btn btn-cta">View All Menu Items</a>
-            </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col-12 text-center">
+                    <p>No featured products available at the moment.</p>
+                </div>
+            <?php endif; ?>
         </div>
-    </section>
+        <div class="text-center mt-4">
+            <a href="food.php" class="btn btn-cta">View All Menu Items</a>
+        </div>
+    </div>
+</section>
+
 
     <!-- Call to Action Section -->
     <section class="page-section quick-stats">

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 22, 2025 at 07:31 PM
+-- Generation Time: Mar 23, 2025 at 01:02 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `canteen_database`
 --
+CREATE DATABASE IF NOT EXISTS `canteen_database` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `canteen_database`;
 
 -- --------------------------------------------------------
 
@@ -27,19 +29,22 @@ SET time_zone = "+00:00";
 -- Table structure for table `cart`
 --
 
-CREATE TABLE `cart` (
-  `cart_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `cart` (
+  `cart_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `item_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`cart_id`),
+  KEY `user_id` (`user_id`),
+  KEY `item_id` (`item_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `cart`
 --
 
 INSERT INTO `cart` (`cart_id`, `user_id`, `item_id`, `quantity`) VALUES
-(54, 18, 12, 1);
+(62, 7, 13, 2);
 
 -- --------------------------------------------------------
 
@@ -47,14 +52,25 @@ INSERT INTO `cart` (`cart_id`, `user_id`, `item_id`, `quantity`) VALUES
 -- Table structure for table `feedback`
 --
 
-CREATE TABLE `feedback` (
-  `feedback_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `feedback` (
+  `feedback_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `stall_id` int(11) NOT NULL,
   `rating` int(11) DEFAULT NULL CHECK (`rating` between 1 and 5),
   `comment` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`feedback_id`),
+  KEY `user_id` (`user_id`),
+  KEY `fk_feedback_stalls` (`stall_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `feedback`
+--
+
+INSERT INTO `feedback` (`feedback_id`, `user_id`, `stall_id`, `rating`, `comment`, `created_at`) VALUES
+(1, 18, 9, 5, 'this is very nice', '2025-03-22 23:25:30'),
+(2, 19, 9, 4, 'this is very delicuous', '2025-03-22 23:53:31');
 
 -- --------------------------------------------------------
 
@@ -62,22 +78,25 @@ CREATE TABLE `feedback` (
 -- Table structure for table `food_storage`
 --
 
-CREATE TABLE `food_storage` (
-  `storage_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `food_storage` (
+  `storage_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_id` int(11) NOT NULL,
   `item_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
-  `expiration_day` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `expiration_day` date DEFAULT NULL,
+  PRIMARY KEY (`storage_id`),
+  KEY `stall_id` (`stall_id`),
+  KEY `item_id` (`item_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `food_storage`
 --
 
 INSERT INTO `food_storage` (`storage_id`, `stall_id`, `item_id`, `quantity`, `expiration_day`) VALUES
-(3, 9, 12, 9, '2025-03-25'),
-(4, 9, 13, 19, '2025-03-28'),
-(5, 8, 14, 12, '2025-03-27');
+(4, 9, 13, 18, '2025-03-28'),
+(5, 8, 14, 12, '2025-03-27'),
+(6, 9, 15, 100, '2025-04-23');
 
 -- --------------------------------------------------------
 
@@ -85,12 +104,14 @@ INSERT INTO `food_storage` (`storage_id`, `stall_id`, `item_id`, `quantity`, `ex
 -- Table structure for table `gcash_payment_details`
 --
 
-CREATE TABLE `gcash_payment_details` (
-  `id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `gcash_payment_details` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
   `gcash_reference` varchar(100) NOT NULL,
-  `gcash_image_path` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `gcash_image_path` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `order_id` (`order_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `gcash_payment_details`
@@ -99,7 +120,9 @@ CREATE TABLE `gcash_payment_details` (
 INSERT INTO `gcash_payment_details` (`id`, `order_id`, `gcash_reference`, `gcash_image_path`) VALUES
 (1, 'ORDER_67dd2f93ab76a', '11231231', 'images/gcash/67dd2f93a76dc_476974947_598964489616296_4802757199467559226_n.png'),
 (2, 'ORDER_67dd31cfe0570', '23232', 'images/gcash/67dd31cfde1ac_476974947_598964489616296_4802757199467559226_n.png'),
-(3, 'ORDER_67deffba23cf2', '123', 'images/gcash/67deffba23848_HEALTHY FOODS.png');
+(3, 'ORDER_67deffba23cf2', '123', 'images/gcash/67deffba23848_HEALTHY FOODS.png'),
+(4, 'ORDER_67df03f300238', '12312', 'images/gcash/67df03f2f19e2_HEALTHY FOODS.png'),
+(5, 'ORDER_67df4d110ccc5', '123', 'images/gcash/67df4d1109cc1_buger.jpg');
 
 -- --------------------------------------------------------
 
@@ -107,15 +130,18 @@ INSERT INTO `gcash_payment_details` (`id`, `order_id`, `gcash_reference`, `gcash
 -- Table structure for table `inventory`
 --
 
-CREATE TABLE `inventory` (
-  `inventory_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `inventory` (
+  `inventory_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `expiry_date` date NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`inventory_id`),
+  KEY `item_id` (`product_id`),
+  KEY `connect_stall` (`stall_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `inventory`
@@ -131,25 +157,27 @@ INSERT INTO `inventory` (`inventory_id`, `stall_id`, `product_id`, `quantity`, `
 -- Table structure for table `menu_items`
 --
 
-CREATE TABLE `menu_items` (
-  `item_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `menu_items` (
+  `item_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   `category` enum('Snacks','Drinks','Meals') NOT NULL,
   `availability` enum('Available','Out Of Stock') DEFAULT 'Out Of Stock',
   `image_path` varchar(255) NOT NULL DEFAULT 'default.jpg',
   `stall_id` int(11) NOT NULL,
-  `description` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `description` text DEFAULT NULL,
+  PRIMARY KEY (`item_id`),
+  KEY `stall_id` (`stall_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `menu_items`
 --
 
 INSERT INTO `menu_items` (`item_id`, `name`, `price`, `category`, `availability`, `image_path`, `stall_id`, `description`) VALUES
-(12, 'egs', 150.00, 'Snacks', 'Available', '../../images/287722010_2617601478373713_8808211517651136_n.png', 9, NULL),
-(13, 'French Fries', 40.00, 'Snacks', 'Available', '../../images/39fec7a8a5f87a0f95f2863a5854f8c2.jpg_720x720q80.jpg', 9, 'Masarap'),
-(14, 'Cheeseburger', 349.99, 'Snacks', 'Out Of Stock', '../../images/39fec7a8a5f87a0f95f2863a5854f8c2.jpg_720x720q80.jpg', 8, 'Masarap, parang si Levi');
+(13, 'French Fries', 40.00, 'Snacks', 'Available', '../../images/Homemade-French-Fries_8.jpg', 9, 'Masarap'),
+(14, 'Cheeseburger', 349.99, 'Snacks', 'Out Of Stock', '../../images/39fec7a8a5f87a0f95f2863a5854f8c2.jpg_720x720q80.jpg', 8, 'Masarap, parang si Levi'),
+(15, 'Cheese Burgers', 100.00, 'Snacks', 'Available', '../../images/buger.jpg', 9, 'delihiyoso');
 
 -- --------------------------------------------------------
 
@@ -157,13 +185,16 @@ INSERT INTO `menu_items` (`item_id`, `name`, `price`, `category`, `availability`
 -- Table structure for table `orders`
 --
 
-CREATE TABLE `orders` (
+CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` varchar(50) NOT NULL,
   `user_id` int(11) NOT NULL,
   `stall_id` int(11) NOT NULL,
   `total_price` decimal(10,2) NOT NULL,
   `order_date` timestamp NOT NULL DEFAULT current_timestamp(),
-  `order_status` enum('Pending','Completed','Cancelled','Ready for Pickup','Partially Completed','Preparing') DEFAULT 'Pending'
+  `order_status` enum('Pending','Completed','Cancelled','Ready for Pickup','Partially Completed','Preparing') DEFAULT 'Pending',
+  PRIMARY KEY (`order_id`),
+  KEY `user_id` (`user_id`),
+  KEY `connect_stall` (`stall_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -172,13 +203,19 @@ CREATE TABLE `orders` (
 
 INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_date`, `order_status`) VALUES
 ('ORDER_67def7a866631', 18, 9, 790.00, '2025-03-22 17:47:20', 'Completed'),
-('ORDER_67deface757f9', 18, 9, 150.00, '2025-03-22 18:00:46', 'Pending'),
+('ORDER_67deface757f9', 18, 9, 150.00, '2025-03-22 18:00:46', 'Ready for Pickup'),
 ('ORDER_67defb26c2df9', 18, 9, 150.00, '2025-03-22 18:02:14', 'Pending'),
 ('ORDER_67defb931a93c', 18, 9, 150.00, '2025-03-22 18:04:03', 'Pending'),
 ('ORDER_67defe339ea67', 7, 9, 150.00, '2025-03-22 18:15:15', 'Completed'),
 ('ORDER_67deff9e19fd7', 7, 9, 150.00, '2025-03-22 18:21:18', 'Completed'),
 ('ORDER_67deffba23cf2', 7, 9, 40.00, '2025-03-22 18:21:46', 'Completed'),
-('ORDER_67df0113aac9e', 7, 9, 150.00, '2025-03-22 18:27:31', 'Completed');
+('ORDER_67df0113aac9e', 7, 9, 150.00, '2025-03-22 18:27:31', 'Completed'),
+('ORDER_67df030373dab', 7, 9, 150.00, '2025-03-22 18:35:47', 'Completed'),
+('ORDER_67df03f300238', 7, 9, 190.00, '2025-03-22 18:39:47', 'Cancelled'),
+('ORDER_67df403b7fd9a', 14, 9, 150.00, '2025-03-22 22:56:59', 'Cancelled'),
+('ORDER_67df45cc2a896', 14, 9, 150.00, '2025-03-22 23:20:44', 'Completed'),
+('ORDER_67df4c7ae4909', 19, 9, 300.00, '2025-03-22 23:49:14', 'Cancelled'),
+('ORDER_67df4d110ccc5', 19, 9, 40.00, '2025-03-22 23:51:45', 'Completed');
 
 -- --------------------------------------------------------
 
@@ -186,30 +223,29 @@ INSERT INTO `orders` (`order_id`, `user_id`, `stall_id`, `total_price`, `order_d
 -- Table structure for table `order_details`
 --
 
-CREATE TABLE `order_details` (
-  `order_detail_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `order_details` (
+  `order_detail_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
   `item_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL,
-  `status` enum('Preparing','Ready','Cancelled','') NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `status` enum('Preparing','Ready','Cancelled','') NOT NULL,
+  PRIMARY KEY (`order_detail_id`),
+  KEY `order_id` (`order_id`),
+  KEY `fk_orderdetails_menuitems` (`item_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `order_details`
 --
 
 INSERT INTO `order_details` (`order_detail_id`, `order_id`, `item_id`, `quantity`, `subtotal`, `unit_price`, `status`) VALUES
-(20, 'ORDER_67def7a866631', 12, 5, 750.00, 150.00, 'Preparing'),
 (21, 'ORDER_67def7a866631', 13, 1, 40.00, 40.00, 'Preparing'),
-(22, 'ORDER_67deface757f9', 12, 1, 150.00, 150.00, 'Preparing'),
-(23, 'ORDER_67defb26c2df9', 12, 1, 150.00, 150.00, 'Preparing'),
-(24, 'ORDER_67defb931a93c', 12, 1, 150.00, 150.00, 'Preparing'),
-(26, 'ORDER_67defe339ea67', 12, 1, 150.00, 150.00, 'Preparing'),
-(30, 'ORDER_67deff9e19fd7', 12, 1, 150.00, 150.00, 'Preparing'),
 (31, 'ORDER_67deffba23cf2', 13, 1, 40.00, 40.00, 'Preparing'),
-(32, 'ORDER_67df0113aac9e', 12, 1, 150.00, 150.00, 'Preparing');
+(35, 'ORDER_67df03f300238', 13, 1, 40.00, 40.00, 'Preparing'),
+(38, 'ORDER_67df4c7ae4909', 15, 3, 300.00, 100.00, 'Preparing'),
+(39, 'ORDER_67df4d110ccc5', 13, 1, 40.00, 40.00, 'Preparing');
 
 -- --------------------------------------------------------
 
@@ -217,14 +253,16 @@ INSERT INTO `order_details` (`order_detail_id`, `order_id`, `item_id`, `quantity
 -- Table structure for table `payments`
 --
 
-CREATE TABLE `payments` (
-  `payment_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `payments` (
+  `payment_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
   `user_id` int(11) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `status` enum('pending','completed','failed') DEFAULT 'pending',
-  `payment_date` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `payment_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`payment_id`),
+  KEY `order_id` (`order_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `payments`
@@ -234,7 +272,13 @@ INSERT INTO `payments` (`payment_id`, `order_id`, `user_id`, `amount`, `status`,
 (1, 'ORDER_67defe339ea67', 7, 150.00, 'pending', '2025-03-22 18:15:15'),
 (2, 'ORDER_67deff9e19fd7', 7, 150.00, '', '2025-03-22 18:21:18'),
 (3, 'ORDER_67deffba23cf2', 7, 40.00, '', '2025-03-22 18:21:46'),
-(4, 'ORDER_67df0113aac9e', 7, 150.00, '', '2025-03-22 18:27:31');
+(4, 'ORDER_67df0113aac9e', 7, 150.00, '', '2025-03-22 18:27:31'),
+(5, 'ORDER_67df030373dab', 7, 150.00, '', '2025-03-22 18:35:47'),
+(6, 'ORDER_67df03f300238', 7, 190.00, '', '2025-03-22 18:39:47'),
+(7, 'ORDER_67df403b7fd9a', 14, 150.00, '', '2025-03-22 22:56:59'),
+(8, 'ORDER_67df45cc2a896', 14, 150.00, '', '2025-03-22 23:20:44'),
+(9, 'ORDER_67df4c7ae4909', 19, 300.00, '', '2025-03-22 23:49:14'),
+(10, 'ORDER_67df4d110ccc5', 19, 40.00, '', '2025-03-22 23:51:45');
 
 -- --------------------------------------------------------
 
@@ -242,12 +286,13 @@ INSERT INTO `payments` (`payment_id`, `order_id`, `user_id`, `amount`, `status`,
 -- Table structure for table `products`
 --
 
-CREATE TABLE `products` (
-  `product_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `products` (
+  `product_id` int(11) NOT NULL AUTO_INCREMENT,
   `product_name` varchar(100) NOT NULL,
   `category` enum('Condiment','Beverage','Eating Essential','') NOT NULL,
-  `unit` enum('Can','Bottle','Pack','') NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `unit` enum('Can','Bottle','Pack','') NOT NULL,
+  PRIMARY KEY (`product_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `products`
@@ -263,14 +308,17 @@ INSERT INTO `products` (`product_id`, `product_name`, `category`, `unit`) VALUES
 -- Table structure for table `receipts`
 --
 
-CREATE TABLE `receipts` (
-  `receipt_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `receipts` (
+  `receipt_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` varchar(50) NOT NULL,
   `user_id` int(11) NOT NULL,
   `receipt_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `total_amount` decimal(10,2) NOT NULL,
-  `payment_method` enum('in-store','gcash') NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `payment_method` enum('in-store','gcash') NOT NULL,
+  PRIMARY KEY (`receipt_id`),
+  KEY `order_id` (`order_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `receipts`
@@ -288,7 +336,13 @@ INSERT INTO `receipts` (`receipt_id`, `order_id`, `user_id`, `receipt_date`, `to
 (9, 'ORDER_67defe339ea67', 7, '2025-03-22 18:15:15', 150.00, 'in-store'),
 (10, 'ORDER_67deff9e19fd7', 7, '2025-03-22 18:21:18', 150.00, 'in-store'),
 (11, 'ORDER_67deffba23cf2', 7, '2025-03-22 18:21:46', 40.00, 'gcash'),
-(12, 'ORDER_67df0113aac9e', 7, '2025-03-22 18:27:31', 150.00, 'in-store');
+(12, 'ORDER_67df0113aac9e', 7, '2025-03-22 18:27:31', 150.00, 'in-store'),
+(13, 'ORDER_67df030373dab', 7, '2025-03-22 18:35:47', 150.00, 'in-store'),
+(14, 'ORDER_67df03f300238', 7, '2025-03-22 18:39:47', 190.00, 'gcash'),
+(15, 'ORDER_67df403b7fd9a', 14, '2025-03-22 22:56:59', 150.00, 'in-store'),
+(16, 'ORDER_67df45cc2a896', 14, '2025-03-22 23:20:44', 150.00, 'in-store'),
+(17, 'ORDER_67df4c7ae4909', 19, '2025-03-22 23:49:14', 300.00, 'in-store'),
+(18, 'ORDER_67df4d110ccc5', 19, '2025-03-22 23:51:45', 40.00, 'gcash');
 
 -- --------------------------------------------------------
 
@@ -296,11 +350,13 @@ INSERT INTO `receipts` (`receipt_id`, `order_id`, `user_id`, `receipt_date`, `to
 -- Table structure for table `retailers`
 --
 
-CREATE TABLE `retailers` (
-  `retailer_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `retailers` (
+  `retailer_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
-  `stall_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `stall_id` int(11) NOT NULL,
+  PRIMARY KEY (`retailer_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `retailers`
@@ -317,14 +373,15 @@ INSERT INTO `retailers` (`retailer_id`, `user_id`, `stall_id`) VALUES
 -- Table structure for table `stalls`
 --
 
-CREATE TABLE `stalls` (
-  `stall_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `stalls` (
+  `stall_id` int(11) NOT NULL AUTO_INCREMENT,
   `stall_name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
   `image_path` varchar(255) NOT NULL DEFAULT 'default_stall.jpg',
   `status` enum('Open','Closed','','') NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`stall_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `stalls`
@@ -351,8 +408,8 @@ INSERT INTO `stalls` (`stall_id`, `stall_name`, `description`, `image_path`, `st
 -- Table structure for table `stall_application`
 --
 
-CREATE TABLE `stall_application` (
-  `application_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `stall_application` (
+  `application_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `stall_name` varchar(100) NOT NULL,
   `stall_description` text DEFAULT NULL,
@@ -362,8 +419,10 @@ CREATE TABLE `stall_application` (
   `birth_certificate` varchar(255) DEFAULT NULL,
   `tin_number` varchar(255) DEFAULT NULL,
   `business_permit` varchar(255) DEFAULT NULL,
-  `valid_id` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `valid_id` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`application_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `stall_application`
@@ -379,8 +438,8 @@ INSERT INTO `stall_application` (`application_id`, `user_id`, `stall_name`, `sta
 -- Table structure for table `users`
 --
 
-CREATE TABLE `users` (
-  `user_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `users` (
+  `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -390,8 +449,12 @@ CREATE TABLE `users` (
   `address` varchar(255) DEFAULT NULL,
   `status` tinyint(1) NOT NULL DEFAULT 1,
   `image_path` varchar(255) DEFAULT 'images/default-profile.jpg',
-  `email_unique` varchar(255) GENERATED ALWAYS AS (case when `email` = 'ad123min@gmail.com' then NULL else `email` end) STORED
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `email_unique` varchar(255) GENERATED ALWAYS AS (case when `email` = 'ad123min@gmail.com' then NULL else `email` end) STORED,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `email_unique` (`email_unique`),
+  UNIQUE KEY `unique_email_constraint` (`email`,`role`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
@@ -409,215 +472,12 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `role`, `balance`, 
 (11, 'Meinfried', '123@gmail.com', '$2y$10$dA6o1HwMunCiebYLSZo5Qe.1WF6SavcA0xaDDjXUxdYL9ETd1u/Ey', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (12, 'Allan', 'a@gmail.com', '$2y$10$jS3SFUAO0CMTvBPaAO0hveeKYWM7K3EmGcNZBxW9v/FEd3dewbAQS', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (13, 'Levi', 'l@gmail.com', '$2y$10$HlFlEWdBU7GbnX2k.70u7ujLB1hpJ8T.mRNuDd3MS2VKcNKQglxaa', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
-(14, 'bor', 'borjabisaya@gmail.com', '$2y$10$CSxsLT/j4yOHoyTD8vBuKO0QvYbOhPVPq90aIHs6jHiLIQ4b8aeMK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
+(14, 'borjabisaya', 'borjabisaya@gmail.com', '$2y$10$CSxsLT/j4yOHoyTD8vBuKO0QvYbOhPVPq90aIHs6jHiLIQ4b8aeMK', 'Retailer', 0.00, '123', 'afss2', 1, 'images/profiles/Harana_tradition_of_Filipinos.jpg'),
 (15, 'Melvs', 'w@gmail.com', '$2y$10$OdI59Cgo1bxHCpANUlNYBOgjZ/EpR40uSaQNXmGfPX.IMSnT0RZBK', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (16, 'Allan', 'allanmonforte1@gmail.com', '$2y$10$KV6xmya9.Vfw1pcUd0xnZ.6RMmrN76krd/6PUZX48uH.fF.pbSsnS', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
 (17, 'melvs', 'catueramelvin08@gmail.com', '$2y$10$OPA6FtH6PQS/fEETzyFoh.Lkh6cHbau8bN858BgfssD0ya2wXPpjy', 'Retailer', 0.00, NULL, NULL, 1, 'images/default-profile.jpg'),
-(18, 'melvinbisaya', 'melvin@bisaya.com', '$2y$10$WGTqlMj0yq0MBZWbh.7sWuOaRm1QSZSKSwCk78X9FMRO0M.dTBhgW', 'Student', 0.00, NULL, NULL, 1, 'images/default-profile.jpg');
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `cart`
---
-ALTER TABLE `cart`
-  ADD PRIMARY KEY (`cart_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `item_id` (`item_id`);
-
---
--- Indexes for table `feedback`
---
-ALTER TABLE `feedback`
-  ADD PRIMARY KEY (`feedback_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `fk_feedback_stalls` (`stall_id`);
-
---
--- Indexes for table `food_storage`
---
-ALTER TABLE `food_storage`
-  ADD PRIMARY KEY (`storage_id`),
-  ADD KEY `stall_id` (`stall_id`),
-  ADD KEY `item_id` (`item_id`);
-
---
--- Indexes for table `gcash_payment_details`
---
-ALTER TABLE `gcash_payment_details`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `order_id` (`order_id`);
-
---
--- Indexes for table `inventory`
---
-ALTER TABLE `inventory`
-  ADD PRIMARY KEY (`inventory_id`),
-  ADD KEY `item_id` (`product_id`),
-  ADD KEY `connect_stall` (`stall_id`);
-
---
--- Indexes for table `menu_items`
---
-ALTER TABLE `menu_items`
-  ADD PRIMARY KEY (`item_id`),
-  ADD KEY `stall_id` (`stall_id`);
-
---
--- Indexes for table `orders`
---
-ALTER TABLE `orders`
-  ADD PRIMARY KEY (`order_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `connect_stall` (`stall_id`);
-
---
--- Indexes for table `order_details`
---
-ALTER TABLE `order_details`
-  ADD PRIMARY KEY (`order_detail_id`),
-  ADD KEY `order_id` (`order_id`),
-  ADD KEY `fk_orderdetails_menuitems` (`item_id`);
-
---
--- Indexes for table `payments`
---
-ALTER TABLE `payments`
-  ADD PRIMARY KEY (`payment_id`),
-  ADD KEY `order_id` (`order_id`);
-
---
--- Indexes for table `products`
---
-ALTER TABLE `products`
-  ADD PRIMARY KEY (`product_id`);
-
---
--- Indexes for table `receipts`
---
-ALTER TABLE `receipts`
-  ADD PRIMARY KEY (`receipt_id`),
-  ADD KEY `order_id` (`order_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `retailers`
---
-ALTER TABLE `retailers`
-  ADD PRIMARY KEY (`retailer_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `stalls`
---
-ALTER TABLE `stalls`
-  ADD PRIMARY KEY (`stall_id`);
-
---
--- Indexes for table `stall_application`
---
-ALTER TABLE `stall_application`
-  ADD PRIMARY KEY (`application_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD UNIQUE KEY `email_unique` (`email_unique`),
-  ADD UNIQUE KEY `unique_email_constraint` (`email`,`role`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `cart`
---
-ALTER TABLE `cart`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
-
---
--- AUTO_INCREMENT for table `feedback`
---
-ALTER TABLE `feedback`
-  MODIFY `feedback_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `food_storage`
---
-ALTER TABLE `food_storage`
-  MODIFY `storage_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `gcash_payment_details`
---
-ALTER TABLE `gcash_payment_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `inventory`
---
-ALTER TABLE `inventory`
-  MODIFY `inventory_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `menu_items`
---
-ALTER TABLE `menu_items`
-  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
-
---
--- AUTO_INCREMENT for table `order_details`
---
-ALTER TABLE `order_details`
-  MODIFY `order_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
-
---
--- AUTO_INCREMENT for table `payments`
---
-ALTER TABLE `payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `products`
---
-ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `receipts`
---
-ALTER TABLE `receipts`
-  MODIFY `receipt_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
-
---
--- AUTO_INCREMENT for table `retailers`
---
-ALTER TABLE `retailers`
-  MODIFY `retailer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `stalls`
---
-ALTER TABLE `stalls`
-  MODIFY `stall_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
--- AUTO_INCREMENT for table `stall_application`
---
-ALTER TABLE `stall_application`
-  MODIFY `application_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+(18, 'melvinbisaya', 'melvin@bisaya.com', '$2y$10$WGTqlMj0yq0MBZWbh.7sWuOaRm1QSZSKSwCk78X9FMRO0M.dTBhgW', 'Student', 0.00, '9999', 'fasfasfas', 1, 'images/profiles/Harana_tradition_of_Filipinos.jpg'),
+(19, 'ian123', 'ian123@gmail.com', '$2y$10$AZ3wCvRI9svKRRuZ/XIa2ePFV/uX99jRLuhk0cT4xBZy8QJfXu/Q2', 'Student', 0.00, '123', 'taguig', 1, 'images/profiles/Harana_tradition_of_Filipinos.jpg');
 
 --
 -- Constraints for dumped tables

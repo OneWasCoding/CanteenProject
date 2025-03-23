@@ -2,7 +2,6 @@
 session_start();
 include '../config.php';
 
-// Redirect to login if user is not logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
@@ -14,12 +13,9 @@ $error = "";
 $message = "";
 $imageUploadMessage = "";
 
-// If form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Process file upload if a file was provided
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['name'] != "") {
         $target_dir = "images/profiles/";
-        // Create the directory if it doesn't exist
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
@@ -41,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($uploadOk == 1) {
             if (move_uploaded_file($_FILES["profile_image"]["tmp_name"], $target_file)) {
-                // Update user image path in database
                 $sql = "UPDATE users SET image_path = ? WHERE user_id = ?";
                 $stmt = $con->prepare($sql);
                 $stmt->bind_param("si", $target_file, $user_id);
@@ -57,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Process updating other profile details
     if (isset($_POST['name'], $_POST['email'], $_POST['phone'], $_POST['address'])) {
         $name = $_POST['name'];
         $email = $_POST['email'];
@@ -80,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch the updated user details
 $sql = "SELECT name, email, phone, address, image_path FROM users WHERE user_id = ?";
 $stmt = $con->prepare($sql);
 $stmt->bind_param("i", $user_id);
@@ -96,62 +89,156 @@ $stmt->close();
     <title>QuickByte Canteen - Update Profile</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS & Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            font-family: 'Poppins', sans-serif;
+            padding-top: 60px;
         }
-        /* Nav Bar - same as user_profile.php */
+
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px 0;
         }
-        .navbar-brand { font-weight: bold; }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: white !important;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
         .dropdown-menu {
             background-color: #fff;
             border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .dropdown-item { color: #333; transition: all 0.3s ease; }
-        .dropdown-item:hover { background-color: #e44d26; color: white; }
+
+        .dropdown-item {
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            color: white;
+            transform: translateX(5px);
+        }
+
         .update-profile-container {
-            max-width: 600px;
-            margin: 2rem auto;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             padding: 2rem;
+            margin: 2rem auto;
+            max-width: 600px;
         }
+
         .update-profile-header {
             text-align: center;
             margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f1f1;
         }
+
         .profile-image {
             width: 150px;
             height: 150px;
             border-radius: 50%;
             object-fit: cover;
             margin: 0 auto 1rem;
-            border: 5px solid #f8f9fa;
+            border: 5px solid #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #e44d26;
+            box-shadow: 0 0 0 0.2rem rgba(228,77,38,0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(228,77,38,0.3);
+        }
+
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+        }
+
         footer {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
             text-align: center;
-            padding: 1rem 0;
+            padding: 1.5rem 0;
             margin-top: auto;
+        }
+
+        .social-icons {
+            margin: 1rem 0;
+        }
+
+        .social-icons a {
+            color: white;
+            margin: 0 10px;
+            font-size: 1.2rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .update-profile-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar (Same as in user_profile.php) -->
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php"><i class="bi bi-shop"></i> QuickByte Canteen</a>
@@ -162,28 +249,38 @@ $stmt->close();
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
-                           data-bs-toggle="dropdown" aria-expanded="false">Home</a>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            Home
+                        </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="food.php">Food Items</a></li>
-                            <li><a class="dropdown-item" href="stalls.php">Stalls</a></li>
+                            <li><a class="dropdown-item" href="food.php"><i class="bi bi-egg-fried"></i> Food Items</a></li>
+                            <li><a class="dropdown-item" href="stalls.php"><i class="bi bi-shop-window"></i> Stalls</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container mt-5">
+    <div class="container">
         <div class="update-profile-container">
             <div class="update-profile-header">
                 <h2>Update Profile</h2>
-                <p>Update your profile information here.</p>
+                <p>Customize your profile information</p>
             </div>
 
             <?php if (!empty($error)): ?>
@@ -199,31 +296,42 @@ $stmt->close();
             <?php endif; ?>
 
             <form method="post" enctype="multipart/form-data">
-                <div class="text-center mb-3">
+                <div class="text-center mb-4">
                     <img src="<?php echo htmlspecialchars($user['image_path']); ?>" alt="Profile Picture" class="profile-image">
                 </div>
+
                 <div class="mb-3">
-                    <label for="name" class="form-label">Name:</label>
-                    <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="name" name="name" 
+                           value="<?php echo htmlspecialchars($user['name']); ?>" required>
                 </div>
+
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email:</label>
-                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           value="<?php echo htmlspecialchars($user['email']); ?>" required>
                 </div>
+
                 <div class="mb-3">
-                    <label for="phone" class="form-label">Phone Number:</label>
-                    <input type="text" class="form-control" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" id="phone" name="phone" 
+                           value="<?php echo htmlspecialchars($user['phone']); ?>" required>
                 </div>
+
                 <div class="mb-3">
-                    <label for="address" class="form-label">Address:</label>
-                    <input type="text" class="form-control" id="address" name="address" value="<?php echo htmlspecialchars($user['address']); ?>" required>
+                    <label for="address" class="form-label">Delivery Address</label>
+                    <input type="text" class="form-control" id="address" name="address" 
+                           value="<?php echo htmlspecialchars($user['address']); ?>" required>
                 </div>
-                <div class="mb-3">
-                    <label for="profile_image" class="form-label">Upload Profile Picture</label>
+
+                <div class="mb-4">
+                    <label for="profile_image" class="form-label">Profile Picture</label>
                     <input class="form-control" type="file" id="profile_image" name="profile_image">
+                    <small class="text-muted">Maximum file size: 500KB. Supported formats: JPG, JPEG, PNG, GIF</small>
                 </div>
+
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-pencil"></i> Update Profile
+                    <i class="bi bi-check2-circle"></i> Save Changes
                 </button>
             </form>
         </div>
@@ -231,10 +339,22 @@ $stmt->close();
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2025 QuickByte Canteen. All rights reserved.</p>
+        <div class="container">
+            <h5>Contact Us</h5>
+            <p>
+                Email: <a href="mailto:support@quickbyte.com">support@quickbyte.com</a><br>
+                Phone: <a href="tel:+1234567890">+123 456 7890</a>
+            </p>
+            <p>Follow us on social media:</p>
+            <div class="social-icons">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+                <a href="#"><i class="bi bi-twitter"></i></a>
+            </div>
+            <p>&copy; 2024 QuickByte Canteen. All rights reserved.</p>
+        </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

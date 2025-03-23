@@ -2,7 +2,6 @@
 session_start();
 include '../config.php';
 
-// Ensure the user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
@@ -10,16 +9,17 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Check if feedback_id is provided
 if (!isset($_GET['feedback_id']) || empty($_GET['feedback_id'])) {
     header("Location: manage_reviews.php");
     exit();
 }
 
-$feedback_id = intval($_GET['feedback_id']); // Ensure it's an integer
+$feedback_id = intval($_GET['feedback_id']);
 
-// Fetch existing review (item_id removed)
-$sql = "SELECT feedback_id, stall_id, rating, comment FROM feedback WHERE feedback_id = ? AND user_id = ?";
+$sql = "SELECT f.feedback_id, f.stall_id, f.rating, f.comment, s.stall_name 
+        FROM feedback f
+        JOIN stalls s ON f.stall_id = s.stall_id
+        WHERE f.feedback_id = ? AND f.user_id = ?";
 $stmt = $con->prepare($sql);
 $stmt->bind_param("ii", $feedback_id, $user_id);
 $stmt->execute();
@@ -27,7 +27,6 @@ $result = $stmt->get_result();
 $review = $result->fetch_assoc();
 $stmt->close();
 
-// Redirect if no matching review is found
 if (!$review) {
     header("Location: manage_reviews.php");
     exit();
@@ -36,34 +35,26 @@ if (!$review) {
 $error = "";
 $success = "";
 
-// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $rating = isset($_POST['rating']) ? intval($_POST['rating']) : 0;
     $comment = trim($_POST['comment'] ?? '');
 
-    // Validate rating
     if ($rating < 1 || $rating > 5) {
         $error = "Please provide a rating between 1 and 5.";
     } else {
-        // Update feedback (item_id removed)
         $sql_update = "UPDATE feedback SET rating = ?, comment = ? WHERE feedback_id = ? AND user_id = ?";
         $stmt_update = $con->prepare($sql_update);
         $stmt_update->bind_param("isii", $rating, $comment, $feedback_id, $user_id);
 
         if ($stmt_update->execute()) {
             $success = "Review updated successfully.";
-            header("Location: edit_review.php?feedback_id=$feedback_id&success=1");
+            header("Location: reviews.php");
             exit();
         } else {
             $error = "Failed to update review.";
         }
         $stmt_update->close();
     }
-}
-
-// If redirected after update, set success message
-if (isset($_GET['success']) && $_GET['success'] == 1) {
-    $success = "Review updated successfully.";
 }
 ?>
 
@@ -73,40 +64,170 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
     <title>Edit Review - QuickByte Canteen</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS & Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            background-color: #f8f9fa;
             font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            padding-top: 60px;
         }
+
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px 0;
         }
-        .navbar-brand { font-weight: bold; }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: white !important;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
         .review-container {
-            max-width: 600px;
-            margin: 4rem auto;
-            background-color: #fff;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             padding: 2rem;
+            margin: 2rem auto;
+            max-width: 600px;
         }
+
         .review-header {
             text-align: center;
             margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f1f1;
         }
+
+        .review-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .star-rating {
+            direction: rtl;
+            display: inline-block;
+            padding: 20px;
+        }
+
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+
+        .star-rating label {
+            color: #bbb;
+            font-size: 2rem;
+            padding: 0 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input[type="radio"]:checked ~ label {
+            color: #f90;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #e44d26;
+            box-shadow: 0 0 0 0.2rem rgba(228,77,38,0.25);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(228,77,38,0.3);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-cancel:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108,117,125,0.3);
+            background: #5a6268;
+            color: white;
+        }
+
         footer {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
             text-align: center;
-            padding: 1rem 0;
+            padding: 1.5rem 0;
             margin-top: auto;
+        }
+
+        .social-icons {
+            margin: 1rem 0;
+        }
+
+        .social-icons a {
+            color: white;
+            margin: 0 10px;
+            font-size: 1.2rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .review-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -122,60 +243,95 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
-                           data-bs-toggle="dropdown" aria-expanded="false">Home</a>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            Home
+                        </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="food.php">Food Items</a></li>
-                            <li><a class="dropdown-item" href="stalls.php">Stalls</a></li>
+                            <li><a class="dropdown-item" href="food.php"><i class="bi bi-egg-fried"></i> Food Items</a></li>
+                            <li><a class="dropdown-item" href="stalls.php"><i class="bi bi-shop-window"></i> Stalls</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a></li>
-                    <li class="nav-item"><a class="nav-link" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cart.php"><i class="bi bi-cart"></i> Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="user_profile.php"><i class="bi bi-person-circle"></i> Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.php"><i class="bi bi-gear"></i> Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
+    <!-- Main Content -->
     <div class="container">
         <div class="review-container">
             <div class="review-header">
-                <h2>Edit Review</h2>
+                <h2><i class="bi bi-pencil-square"></i> Edit Review</h2>
+                <p class="text-muted">Editing review for <?php echo htmlspecialchars($review['stall_name']); ?></p>
             </div>
-            
+
             <?php if (!empty($error)): ?>
                 <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
+
             <?php if (!empty($success)): ?>
                 <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
             <?php endif; ?>
-            
+
             <form method="POST">
-                <div class="mb-3">
-                    <label for="rating" class="form-label">Rating (1 to 5):</label>
-                    <select class="form-select" id="rating" name="rating" required>
-                        <option value="">Select Rating</option>
-                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                            <option value="<?php echo $i; ?>" <?php echo ($review['rating'] == $i) ? 'selected' : ''; ?>>
-                                <?php echo $i; ?>
-                            </option>
+                <div class="mb-4 text-center">
+                    <label class="form-label d-block">Your Rating:</label>
+                    <div class="star-rating">
+                        <?php for ($i = 5; $i >= 1; $i--): ?>
+                            <input type="radio" id="star<?php echo $i; ?>" name="rating" value="<?php echo $i; ?>" 
+                                   <?php echo ($review['rating'] == $i) ? 'checked' : ''; ?>>
+                            <label for="star<?php echo $i; ?>"><i class="fas fa-star"></i></label>
                         <?php endfor; ?>
-                    </select>
+                    </div>
                 </div>
-                <div class="mb-3">
+
+                <div class="mb-4">
                     <label for="comment" class="form-label">Your Review:</label>
-                    <textarea class="form-control" id="comment" name="comment" rows="5" required><?php echo htmlspecialchars($review['comment'] ?? ''); ?></textarea>
+                    <textarea class="form-control" id="comment" name="comment" rows="5" 
+                              placeholder="Share your thoughts about your experience..." 
+                              required><?php echo htmlspecialchars($review['comment'] ?? ''); ?></textarea>
                 </div>
-                <button type="submit" class="btn btn-success w-100"><i class="bi bi-pencil"></i> Update Review</button>
+
+                <button type="submit" class="btn btn-submit">
+                    <i class="bi bi-check-circle"></i> Update Review
+                </button>
+                <a href="reviews.php" class="btn btn-cancel">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
             </form>
         </div>
     </div>
-    
+
+    <!-- Footer -->
     <footer>
-        <p>&copy; 2025 QuickByte Canteen. All rights reserved.</p>
+        <div class="container">
+            <h5>Contact Us</h5>
+            <p>
+                Email: <a href="mailto:support@quickbyte.com">support@quickbyte.com</a><br>
+                Phone: <a href="tel:+1234567890">+123 456 7890</a>
+            </p>
+            <p>Follow us on social media:</p>
+            <div class="social-icons">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+                <a href="#"><i class="bi bi-twitter"></i></a>
+            </div>
+            <p>&copy; 2024 QuickByte Canteen. All rights reserved.</p>
+        </div>
     </footer>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -2,13 +2,11 @@
 session_start();
 include '../config.php';
 
-// Redirect to login if user is not logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-// Fetch all categories from the menu_items table
 $sql_categories = "SELECT DISTINCT category FROM menu_items ORDER BY category ASC";
 $stmt_categories = $con->prepare($sql_categories);
 $stmt_categories->execute();
@@ -16,20 +14,17 @@ $result_categories = $stmt_categories->get_result();
 $categories = $result_categories->fetch_all(MYSQLI_ASSOC);
 $stmt_categories->close();
 
-// Get the selected category from the query string (default to 'all')
 $category_filter = isset($_GET['category']) ? $_GET['category'] : 'all';
 
-// Get the selected sort order from the query string (default to 'default')
-$sort_order = isset($_GET['sort']) ? $_GET['sort'] : 'default';
-
-// Build the SQL query based on the selected category and sort order
+// Fetch and process menu items
 $sql = "
     SELECT 
         m.item_id, 
         m.name, 
         m.price, 
         m.category, 
-        m.image_path, 
+        m.image_path,
+        m.description, 
         COALESCE(fs.quantity, 0) AS quantity_in_stock
     FROM 
         menu_items m
@@ -43,26 +38,8 @@ if ($category_filter !== 'all') {
     $sql .= " AND m.category = ?";
 }
 
-// Add sorting options
-switch ($sort_order) {
-    case 'price_low_to_high':
-        $sql .= " ORDER BY m.price ASC";
-        break;
-    case 'price_high_to_low':
-        $sql .= " ORDER BY m.price DESC";
-        break;
-    case 'name_a_to_z':
-        $sql .= " ORDER BY m.name ASC";
-        break;
-    case 'name_z_to_a':
-        $sql .= " ORDER BY m.name DESC";
-        break;
-    default:
-        $sql .= " ORDER BY m.category ASC"; // Default sort by category
-        break;
-}
+$sql .= " ORDER BY m.category ASC, m.name ASC";
 
-// Prepare and execute the query
 $stmt = $con->prepare($sql);
 if ($category_filter !== 'all') {
     $stmt->bind_param("s", $category_filter);
@@ -79,164 +56,281 @@ $stmt->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Food Menu - QuickByte Canteen</title>
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
             font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            padding-top: 60px;
         }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
         .navbar {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
-            color: white;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            padding: 15px 0;
         }
+
         .navbar-brand {
             font-weight: bold;
+            font-size: 1.5rem;
+            color: white !important;
         }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: white !important;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
         .dropdown-menu {
             background-color: #fff;
             border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
+
         .dropdown-item {
-            color: #333;
+            padding: 8px 20px;
             transition: all 0.3s ease;
         }
+
         .dropdown-item:hover {
-            background-color: #e44d26;
-            color: white;
-        }
-        .filter-buttons {
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        .filter-button {
-            background-color: #e44d26;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-            text-decoration: none;
-        }
-        .filter-button:hover {
-            opacity: 0.8;
-        }
-        .filter-button.active {
-            background-color: #c63e1e;
-        }
-        .menu-item {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        .menu-item:hover {
-            transform: translateY(-5px);
-        }
-        .menu-item img {
-            max-width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        .menu-item img:hover {
-            transform: scale(1.05);
-        }
-        .menu-item .card-body {
-            flex-grow: 1;
-            text-align: center;
-        }
-        .stock-info {
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        .btn-add-cart {
-            background-color: #e44d26;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-            width: 100%;
-            margin-top: auto;
-        }
-        .btn-add-cart:hover {
-            opacity: 0.8;
-        }
-        .btn-sold-out {
-            background-color: transparent;
-            border: 1px solid #ccc;
-            color: #ccc;
-            border-radius: 5px;
-            padding: 10px 20px;
-            cursor: not-allowed;
-            width: 100%;
-            margin-top: auto;
-        }
-        .sorting-options {
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        .sorting-options a {
-            margin: 0 10px;
-            text-decoration: none;
-            color: #333;
-            transition: color 0.3s ease;
-        }
-        .sorting-options a:hover {
-            color: #e44d26;
-        }
-        .sorting-options a.active {
-            color: #e44d26;
-            font-weight: bold;
-        }
-        footer {
             background: linear-gradient(135deg, #e44d26, #ff7f50);
             color: white;
+            transform: translateX(5px);
+        }
+
+        .menu-container {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            max-width: 1200px;
+        }
+
+        .menu-title {
             text-align: center;
-            padding: 1rem 0;
-            margin-top: auto;
+            margin-bottom: 2rem;
+            color: #333;
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+
+        .menu-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            margin: 10px auto;
+            border-radius: 2px;
+        }
+
+        .filters-container {
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .filter-btn {
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(228, 77, 38, 0.2);
+            color: white;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #ff7f50, #e44d26);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .food-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin: 0 auto;
+            max-width: 350px;
+        }
+
+        .food-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .food-image {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .food-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .food-card:hover .food-image img {
+            transform: scale(1.1);
+        }
+
+        .category-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+
+        .food-info {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .food-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .food-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #e44d26;
+            margin-bottom: 1rem;
+        }
+
+        .stock-info {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .in-stock { 
+            color: #2ecc71; 
+            font-weight: 600;
+        }
+
+        .out-of-stock { 
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .btn-add-cart, .btn-view-details {
+            width: 100%;
+            padding: 10px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-add-cart {
+            background: linear-gradient(135deg, #e44d26, #ff7f50);
+            color: white;
+            border: none;
+        }
+
+        .btn-view-details {
+            background: transparent;
+            border: 2px solid #e44d26;
+            color: #e44d26;
+        }
+
+        .btn-add-cart:hover, .btn-view-details:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(228, 77, 38, 0.2);
+            color: white;
+        }
+
+        .btn-view-details:hover {
+            background: #e44d26;
+        }
+
+        .row {
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .menu-title {
+                font-size: 2rem;
+            }
+            
+            .filters-container {
+                padding: 15px;
+            }
+            
+            .filter-btn {
+                width: calc(50% - 10px);
+                margin: 5px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php"><i class="bi bi-shop"></i> QuickByte Canteen</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="index.php" id="navbarDropdown" role="button" 
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
                            data-bs-toggle="dropdown" aria-expanded="false">
                             Home
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="food.php">Food Items</a></li>
-                            <li><a class="dropdown-item" href="stalls.php">Stalls</a></li>
+                            <li><a class="dropdown-item" href="food.php"><i class="bi bi-egg-fried"></i> Food Items</a></li>
+                            <li><a class="dropdown-item" href="stalls.php"><i class="bi bi-shop-window"></i> Stalls</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
@@ -256,57 +350,64 @@ $stmt->close();
         </div>
     </nav>
 
-    <!-- Filter & Sorting Section -->
-    <section class="container mt-4">
-        <h2 class="text-center mb-4">Food Menu</h2>
-        <div class="filter-buttons">
-            <a href="?category=all" class="filter-button <?php echo $category_filter === 'all' ? 'active' : ''; ?>">All</a>
-            <?php foreach ($categories as $category): ?>
-                <a href="?category=<?php echo htmlspecialchars($category['category']); ?>" class="filter-button <?php echo $category_filter === $category['category'] ? 'active' : ''; ?>">
-                    <?php echo htmlspecialchars($category['category']); ?>
+    <!-- Main Content -->
+    <div class="container menu-container">
+        <h1 class="menu-title">Our Menu</h1>
+        
+        <!-- Filters -->
+        <div class="filters-container">
+            <div class="text-center">
+                <a href="?category=all" class="filter-btn <?php echo $category_filter === 'all' ? 'active' : ''; ?>">
+                    All Items
                 </a>
-            <?php endforeach; ?>
+                <?php foreach ($categories as $category): ?>
+                    <a href="?category=<?php echo urlencode($category['category']); ?>" 
+                       class="filter-btn <?php echo $category_filter === $category['category'] ? 'active' : ''; ?>">
+                        <?php echo htmlspecialchars($category['category']); ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </div>
 
-        <!-- Sorting Options -->
-        <div class="sorting-options">
-            <span>Sort by:</span>
-            <a href="?category=<?php echo $category_filter; ?>&sort=default" class="<?php echo $sort_order === 'default' ? 'active' : ''; ?>">Default</a>
-            <a href="?category=<?php echo $category_filter; ?>&sort=price_low_to_high" class="<?php echo $sort_order === 'price_low_to_high' ? 'active' : ''; ?>">Price (Low to High)</a>
-            <a href="?category=<?php echo $category_filter; ?>&sort=price_high_to_low" class="<?php echo $sort_order === 'price_high_to_low' ? 'active' : ''; ?>">Price (High to Low)</a>
-            <a href="?category=<?php echo $category_filter; ?>&sort=name_a_to_z" class="<?php echo $sort_order === 'name_a_to_z' ? 'active' : ''; ?>">Name (A to Z)</a>
-            <a href="?category=<?php echo $category_filter; ?>&sort=name_z_to_a" class="<?php echo $sort_order === 'name_z_to_a' ? 'active' : ''; ?>">Name (Z to A)</a>
-        </div>
-    </section>
-
-    <!-- Menu Items -->
-    <section class="container mt-4">
-        <div class="row">
+        <!-- Menu Items Grid -->
+        <div class="row g-4">
             <?php if (!empty($menuItems)): ?>
                 <?php foreach ($menuItems as $item): ?>
-                    <div class="col-md-4 mb-4">
-                        <div class="menu-item <?php echo $item['quantity_in_stock'] <= 0 ? 'sold-out' : ''; ?>">
-                            <img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
-                            <div class="card-body">
-                                <h4><?php echo htmlspecialchars($item['name']); ?></h4>
-                                <p><strong>Price:</strong> ₱<?php echo number_format($item['price'], 2); ?></p>
-                                <p><strong>Category:</strong> <?php echo htmlspecialchars($item['category']); ?></p>
-                                <p class="stock-info">
+                    <?php
+                    // Process the image_path for the current item
+                    $image_path = str_replace("../../", "../", $item['image_path']);
+                    ?>
+                    <div class="col-md-4">
+                        <div class="food-card">
+                            <div class="food-image">
+                                <img src="<?php echo htmlspecialchars($image_path); ?>" 
+                                     alt="<?php echo htmlspecialchars($item['name']); ?>">
+                                <div class="category-badge">
+                                    <?php echo htmlspecialchars($item['category']); ?>
+                                </div>
+                            </div>
+                            <div class="food-info">
+                                <h3 class="food-title"><?php echo htmlspecialchars($item['name']); ?></h3>
+                                <div class="food-price">₱<?php echo number_format($item['price'], 2); ?></div>
+                                <div class="stock-info">
                                     <?php if ($item['quantity_in_stock'] > 0): ?>
-                                        <strong>In Stock:</strong> <?php echo $item['quantity_in_stock']; ?>
+                                        <span class="in-stock">
+                                            <i class="bi bi-check-circle-fill"></i> 
+                                            Available Stock: <?php echo $item['quantity_in_stock']; ?>
+                                        </span>
                                     <?php else: ?>
-                                        <strong>Sold Out</strong>
+                                        <span class="out-of-stock">
+                                            <i class="bi bi-x-circle-fill"></i> Out of Stock
+                                        </span>
                                     <?php endif; ?>
-                                </p>
-                                <button
-                                    class="<?php echo $item['quantity_in_stock'] > 0 ? 'btn-add-cart' : 'btn-sold-out'; ?>"
-                                    onclick="addToCart(<?php echo $item['item_id']; ?>)"
-                                    <?php echo $item['quantity_in_stock'] <= 0 ? 'disabled' : ''; ?>
-                                >
-                                    <?php echo $item['quantity_in_stock'] > 0 ? '<i class="bi bi-cart-plus"></i> Add to Cart' : 'Sold Out'; ?>
+                                </div>
+                                <button onclick="addToCart(<?php echo $item['item_id']; ?>)" 
+                                        class="btn-add-cart"
+                                        <?php echo $item['quantity_in_stock'] <= 0 ? 'disabled' : ''; ?>>
+                                    <i class="bi bi-cart-plus"></i> Add to Cart
                                 </button>
-                                <!-- Added View Details button -->
-                                <a href="product_details.php?item_id=<?php echo $item['item_id']; ?>" class="btn btn-outline-secondary w-100 mt-2">
+                                <a href="product_details.php?item_id=<?php echo $item['item_id']; ?>" 
+                                   class="btn-view-details">
                                     <i class="bi bi-info-circle"></i> View Details
                                 </a>
                             </div>
@@ -319,48 +420,31 @@ $stmt->close();
                 </div>
             <?php endif; ?>
         </div>
-    </section>
+    </div>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 QuickByte Canteen. All rights reserved.</p>
-    </footer>
-
-    <!-- JavaScript for Add to Cart -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function addToCart(itemId) {
             fetch('add_to_cart.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({ item_id: itemId })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Item added to cart!');
-                    // Optional: Update cart count in navbar
-                    updateCartCount();
+                    alert('Item added to cart successfully!');
                 } else {
                     alert(data.message || 'Failed to add item to cart.');
                 }
-            });
-        }
-
-        function updateCartCount() {
-            // Implement logic to fetch and update cart count
-            // Example:
-            fetch('get_cart_count.php')
-            .then(response => response.json())
-            .then(data => {
-                const cartLink = document.querySelector('a[href="cart.php"]');
-                if (cartLink) {
-                    cartLink.innerHTML = `<i class="bi bi-cart"></i> Cart (${data.count})`;
-                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the item to cart.');
             });
         }
     </script>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

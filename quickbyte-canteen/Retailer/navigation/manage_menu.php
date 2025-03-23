@@ -72,7 +72,7 @@
 
     // Check if the user is logged in as a retailer
     if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !isset($_SESSION['stall_id']) || $_SESSION['role'] != 'Retailer') {
-        header("Location: ../../auth/login.php");
+        header("Location: ../auth/login.php");
         exit();
     }
 
@@ -340,77 +340,88 @@
         </div>
 
         <!-- Bootstrap Modal -->
-        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Item</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="modal-body">
-                            <input type="hidden" name="item_id" id="edit_item_id">
-                            <div class="mb-3">
-                                <label class="form-label">Item Name</label>
-                                <input type="text" name="name" id="edit_name" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <textarea name="description" id="edit_description" class="form-control" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Price</label>
-                                <input type="number" name="price" id="edit_price" step="0.01" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Availability</label>
-                                <select name="availability" id="edit_availability" class="form-select">
-                                    <option value="Available">Available</option>
-                                    <option value="Out Of Stock">Out Of Stock</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" name="quantity" id="edit_quantity" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Expiration</label>
-                                <input type="date" name="expiration_day" id="edit_expiration_day" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Image</label>
-                                <input type="file" name="image" class="form-control" accept="image/*">
-                                <input type="hidden" name="current_image" id="edit_current_image">
-                                <?php if (!empty($item['image_path'])): ?>
-                                    <img src="<?php echo htmlspecialchars($item['image_path']); ?>" class="food-image mt-2" alt="Current Image">
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" name="edit_item" class="btn btn-primary">Save Changes</button>
-                        </div>
-                    </form>
-                </div>
+        <!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="item_id" id="edit_item_id">
+                    <div class="mb-3">
+                        <label class="form-label">Item Name</label>
+                        <input type="text" name="name" id="edit_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" id="edit_description" class="form-control" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Price</label>
+                        <input type="number" name="price" id="edit_price" step="0.01" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Availability</label>
+                        <select name="availability" id="edit_availability" class="form-select">
+                            <option value="Available">Available</option>
+                            <option value="Out Of Stock">Out Of Stock</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" name="quantity" id="edit_quantity" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Expiration</label>
+                        <input type="date" name="expiration_day" id="edit_expiration_day" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Image</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        <input type="hidden" name="current_image" id="edit_current_image">
+                        <!-- Image Preview -->
+                        <img id="edit_image_preview" src="" class="food-image mt-2" alt="Current Image" style="max-width: 100px; max-height: 100px; display: none;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" name="edit_item" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
         </div>
+    </div>
+</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function editItem(id, name, description, price, availability, quantity, expiration_day, image_path) {
-            document.getElementById('edit_item_id').value = id;
-            document.getElementById('edit_name').value = name;
-            document.getElementById('edit_description').value = description;
-            document.getElementById('edit_price').value = price;
-            document.getElementById('edit_availability').value = availability;
-            document.getElementById('edit_quantity').value = quantity;
-            document.getElementById('edit_expiration_day').value = expiration_day;
-            document.getElementById('edit_current_image').value = image_path;
+    function editItem(id, name, description, price, availability, quantity, expiration_day, image_path) {
+        // Set form values
+        document.getElementById('edit_item_id').value = id;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_description').value = description;
+        document.getElementById('edit_price').value = price;
+        document.getElementById('edit_availability').value = availability;
+        document.getElementById('edit_quantity').value = quantity;
+        document.getElementById('edit_expiration_day').value = expiration_day;
+        document.getElementById('edit_current_image').value = image_path;
 
-            const editModal = new bootstrap.Modal(document.getElementById('editModal'));
-            editModal.show();
+        // Update the image preview
+        const imagePreview = document.getElementById('edit_image_preview');
+        if (image_path) {
+            imagePreview.src = image_path;
+            imagePreview.style.display = 'block';
+        } else {
+            imagePreview.style.display = 'none';
         }
-    </script>
+
+        // Show the modal
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+    }
+</script>
 </body>
 </html>
